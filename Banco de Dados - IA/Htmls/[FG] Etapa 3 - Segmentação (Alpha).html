@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Mixagem Dinâmica - Voxy Mix</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background:
+                radial-gradient(circle at 15% 25%, rgba(0, 255, 200, 0.02) 0%, transparent 60%),
+                radial-gradient(circle at 85% 75%, rgba(100, 0, 255, 0.02) 0%, transparent 60%),
+                linear-gradient(180deg, #0a0a0a 0%, #111111 25%, #0f0f0f 75%, #0a0a0a 100%);
+            color: #e8e8e8; min-height: 100vh; overflow-x: hidden; position: relative;
+            display: flex; align-items: center; justify-content: center; padding: 2rem;
+        }
+        body::before { /* Carbon Texture */
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0);
+            background-size: 20px 20px; pointer-events: none; opacity: 0.3; z-index: -1;
+        }
+        .main-container { max-width: 800px; width: 100%; position: relative; z-index: 1; }
+        
+        /* ===== MAIN RACK ===== */
+        .rack {
+            background: linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 50%, #1a1a1a 100%);
+            border: 1px solid rgba(100, 100, 100, 0.3);
+            border-radius: 12px; padding: 2rem; position: relative;
+            transition: border-color 0.4s ease, box-shadow 0.4s ease; /* Transição suave para borda e sombra */
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 1s ease-out 0.6s forwards;
+            overflow: hidden; /* Para conter o ::before se ele sair dos limites */
+        }
+        .rack.active {
+            opacity: 1; /* Garante visibilidade */
+            border-color: rgba(0, 162, 255, 0.6);
+            /* Sombra de brilho estática, sem animação pesada por enquanto */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 162, 255, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+             /* A animação rack-glow foi removida temporariamente para estabilidade */
+        }
+        .rack.active: { /* Linha azul no topo removida */
+            /* Removido: não queremos a linha azul no topo */
+        }
+        /* Ajuste para o conteúdo do rack não ficar sob a linha ::before */
+        .rack-header, .segment-controls, .segment-support, .knob-section, .vu-section, .leds, .advance-section {
+            position: relative;
+            z-index: 1; /* Abaixo da linha ::before, mas acima do fundo do rack */
+        }
+        /* ===== RACK HEADER (semelhante ao anterior) ===== */
+        .rack-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .rack-name { font-size: 1.2rem; font-weight: 600; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s ease; }
+        .rack.active .rack-name { color: #00a2ff; text-shadow: 0 0 8px rgba(0, 162, 255, 0.6); }
+        .rack-number { 
+            background: linear-gradient(145deg, #ff4444, #cc0000); 
+            color: #ffffff; 
+            padding: 0.3rem 0.6rem; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+            font-weight: bold; 
+            border: 1px solid #ff4444; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.6), 0 0 20px rgba(255, 68, 68, 0.3);
+            animation: power-blink 2s ease-in-out infinite;
+        }
+        .rack-number:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.8), 0 0 25px rgba(255, 68, 68, 0.4);
+        }
+        .rack-number.powered-on {
+            background: linear-gradient(145deg, #00ff00, #00cc00);
+            border-color: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.6), 0 0 20px rgba(0, 255, 0, 0.3);
+            animation: none;
+        }
+        @keyframes power-blink {
+            0%, 100% { 
+                box-shadow: 0 0 10px rgba(255, 68, 68, 0.6), 0 0 20px rgba(255, 68, 68, 0.3); 
+            }
+            50% { 
+                box-shadow: 0 0 20px rgba(255, 68, 68, 1), 0 0 35px rgba(255, 68, 68, 0.6); 
+            }
+        }
+        
+        /* ===== SISTEMA B&W QUANDO DESLIGADO ===== */
+        .rack.powered-off .segment-controls,
+        .rack.powered-off .segment-support,
+        .rack.powered-off .knob-section,
+        .rack.powered-off .vu-section,
+        .rack.powered-off .leds,
+        .rack.powered-off .advance-section {
+            filter: grayscale(100%) brightness(0.4);
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        /* ===== SEGMENTATION BUTTONS (estilo da versão "quase lá") ===== */
+        .segment-controls { display: flex; gap: 1rem; margin-bottom: 2rem; justify-content: center; }
+        .segment-btn {
+            width: 120px; height: 40px; background: linear-gradient(145deg, #2e2e2e 0%, #1f1f1f 50%, #2e2e2e 100%);
+            border: 1px solid #444; border-radius: 8px; color: #ccc; font-size: 0.9rem; font-weight: bold;
+            cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+            text-transform: uppercase; box-shadow: 0 3px 5px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -1px 1px rgba(0,0,0,0.1);
+            position: relative; z-index: 10; /* Para garantir que esteja clicável sobre outros elementos do rack */
+        }
+        .segment-btn::before { /* LED do botão */
+            content: ''; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%;
+            background: #3a3a3a; border: 1px solid #505050; transition: all 0.3s ease; z-index: 1;
+        }
+        .segment-btn:hover {
+            border-color: #00a2ff; color: #00a2ff; transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 0 12px rgba(0,162,255,0.3), inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -1px 1px rgba(0,0,0,0.15);
+        }
+        .segment-btn.active {
+            background: linear-gradient(145deg, #00b2ff 5%, #007acc 60%, #0098e0 100%); color: #ffffff;
+            border-color: #00b2ff; text-shadow: 0 0 4px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 0 18px rgba(0,162,255,0.75), inset 0 1px 2px rgba(100,200,255,0.3), inset 0 -1px 2px rgba(0,50,100,0.2);
+        }
+        .segment-btn.active::before { background: #33ff33; border-color: #33ff33; box-shadow: 0 0 7px rgba(50,255,50,0.9), 0 0 12px rgba(50,255,50,0.5); }
+        .segment-btn.both-selected {
+            background: linear-gradient(145deg, #ffd700 5%, #ffc300 60%, #ffcc33 100%); color: #222;
+            border-color: #ffd700; text-shadow: 0 0 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 0 18px rgba(255,215,0,0.75), inset 0 1px 2px rgba(255,230,150,0.3), inset 0 -1px 2px rgba(100,80,0,0.2);
+        }
+        .segment-btn.both-selected::before { background: linear-gradient(45deg, #ffffff, #fff8e0); border-color: #ffe08c; box-shadow: 0 0 8px rgba(255,235,150,1), 0 0 12px rgba(255,235,150,0.6); }
+        .segment-support { text-align: center; font-size: 0.8rem; color: #888; font-style: italic; margin-bottom: 2rem; }
+        /* ===== KNOB, VU, LEDS (estilos como na versão "quase lá", sem grandes mudanças aqui) ===== */
+        .knob-section { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-bottom: 2rem;}
+        .knob-label { font-size: 1rem; color: #ccc; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+        .knob { width: 120px; height: 120px; border-radius: 50%; position: relative; cursor: grab; transition: all 0.3s ease; background: radial-gradient(circle at 30% 30%, #3a3a3a, #1a1a1a), radial-gradient(circle at 70% 70%, #2a2a2a, #0a0a0a); border: 2px solid transparent; box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.3); }
+        .knob:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 20px rgba(0,162,255,0.3), inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.3); }
+        .knob.dragging { cursor: grabbing; transform: scale(1.08); box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 30px rgba(0,162,255,0.5), inset 0 2px 4px rgba(255,255,255,0.15), inset 0 -2px 4px rgba(0,0,0,0.35); }
+        .knob.active { border-color: #00a2ff; box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 25px rgba(0,162,255,0.6), inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.3); }
+        .knob-indicator { position: absolute; top: 8px; left: 50%; width: 4px; height: 30px; background: linear-gradient(180deg, #00a2ff, #ffffff); border-radius: 2px; transform-origin: center 52px; transform: translateX(-50%) rotate(0deg); transition: none; box-shadow: 0 0 8px rgba(0,162,255,0.8); }
+        .knob-value { font-size: 1.3rem; font-weight: bold; color: #00a2ff; text-shadow: 0 0 8px rgba(0,162,255,0.6); }
+        .vu-section { margin-bottom: 2rem; }
+        .vu-label { font-size: 0.8rem; color: #888; margin-bottom: 0.5rem; text-transform: uppercase; text-align: center; }
+        .vu-meter { width: 100%; height: 20px; background: linear-gradient(90deg, #0a0a0a 0%, #111111 50%, #0a0a0a 100%); border: 2px solid #333; border-radius: 10px; position: relative; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+        .vu-bar { height: 100%; width: 0%; border-radius: 8px; transition: width 0.3s ease; background: linear-gradient(90deg, #00ff00 0%, #00ff00 60%, #ffff00 75%, #ff0000 100%); box-shadow: 0 0 12px rgba(0,255,0,0.4); position: relative; }
+        .vu-bar::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: vu-shine 2s ease-in-out infinite; }
+        @keyframes vu-shine { 0% { left: -100%; } 100% { left: 100%; } }
+        .progress-text { text-align: center; font-size: 0.9rem; color: #00a2ff; margin-top: 0.5rem; font-weight: 600; min-height: 1.2rem; }
+        .leds { display: flex; gap: 1rem; align-items: center; justify-content: center; margin-bottom: 2rem; }
+        .led-group { display: flex; align-items: center; gap: 0.3rem; }
+        .led { width: 10px; height: 10px; border-radius: 50%; background: #333; border: 1px solid #555; transition: all 0.3s ease; }
+        .led.power-on { background: #00ff00; border-color: #00ff00; box-shadow: 0 0 10px rgba(0,255,0,0.8); animation: led-breathe 2s ease-in-out infinite; }
+        @keyframes led-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .led.processing { background: #ffff00; border-color: #ffff00; box-shadow: 0 0 10px rgba(255,255,0,0.8); animation: led-pulse 1s ease-in-out infinite; }
+        @keyframes led-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .led.complete { background: #00a2ff; border-color: #00a2ff; box-shadow: 0 0 12px rgba(0,162,255,1); animation: led-glow 1.5s ease-in-out infinite; }
+        @keyframes led-glow { 0%, 100% { box-shadow: 0 0 12px rgba(0,162,255,1); } 50% { box-shadow: 0 0 20px rgba(0,162,255,1), 0 0 30px rgba(0,162,255,0.5); } }
+        .led-label { font-size: 0.6rem; color: #666; text-transform: uppercase; }
+        .advance-section { text-align: center; opacity: 0; animation: fadeInUp 1s ease-out 0.8s forwards; }
+        
+        /* ===== ADVANCE BUTTON - CORRIGIDO PARA CENTRALIZAÇÃO E TEXTO ===== */
+        .advance-btn { 
+            width: 100%; 
+            max-width: 400px; /* Aumentado ainda mais */ 
+            height: 60px; /* Aumentado a altura */ 
+            background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #2a2a2a 100%); 
+            border: 1px solid #444; 
+            border-radius: 8px; 
+            color: #666; 
+            font-size: 0.9rem; /* Aumentado um pouco */ 
+            font-weight: bold; 
+            cursor: not-allowed; 
+            transition: all 0.3s ease; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; /* Ajustado */ 
+            opacity: 0.5; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1);
+            /* CORREÇÃO: Centralização e espaçamento adequado */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 15px; /* Mais padding */
+            margin: 0 auto; /* Centralizar o próprio botão */
+            text-align: center;
+            line-height: 1.2;
+            /* Permitir quebra de linha se necessário */
+            white-space: normal;
+            word-wrap: break-word;
+            overflow: visible;
+        }
+        
+        .advance-btn.enabled { 
+            background: linear-gradient(145deg, #00ff00, #00cc00); 
+            color: #ffffff; /* Branco como na segunda imagem */
+            border-color: #00ff00; 
+            cursor: pointer; 
+            opacity: 1; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 15px rgba(0,255,0,0.7); 
+            animation: pulse-success 2s ease-in-out infinite;
+            /* Tipografia Montserrat 800 como referência */
+            font-weight: 800; /* Weight correto da referência */
+            font-size: 1.5rem; /* Aumentado para melhor visibilidade */
+            letter-spacing: 1.5px; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6); 
+            font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif; /* Montserrat primeiro */
+        }
+        .advance-btn.enabled:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.4), 0 0 20px rgba(0,255,0,0.8); }
+        @keyframes pulse-success { 0%,100% { box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 15px rgba(0,255,0,0.7); } 50% { box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 25px rgba(0,255,0,1); } }
+        
+        /* ===== NOTIFICATIONS - RESTAURADAS ORIGINAIS ===== */
+        .notification { position: fixed; top: 50px; right: 20px; min-width: 320px; max-width: 380px; background: rgba(30,30,30,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; color: white; font-size: 0.9rem; transform: translateX(420px); transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5); z-index: 1000; backdrop-filter: blur(20px); display: flex; align-items: center; gap: 12px; }
+        .notification.show { transform: translateX(0); }
+        .notification-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+        .notification-content { flex: 1; }
+        .notification-title { font-weight: 600; margin-bottom: 2px; font-size: 0.85rem; }
+        .notification-message { font-size: 0.8rem; opacity: 0.9; line-height: 1.3; }
+        .notification.positive .notification-icon { background: #1DB954; color: white; }
+        .notification.negative .notification-icon { background: #FF4444; color: white; }
+        .notification.completion .notification-icon { background: linear-gradient(45deg, #FFD700, #FFA500); color: white; }
+        /* ===== SYSTEM NOTIFICATIONS - NOVA ESTÉTICA ===== */
+        .system-notification {
+            position: fixed;
+            top: -150px;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 320px;
+            max-width: 400px;
+            background: linear-gradient(145deg, rgba(20,20,20,0.98), rgba(40,40,40,0.95));
+            border: 2px solid rgba(0, 162, 255, 0.6);
+            border-radius: 16px;
+            padding: 20px 24px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.8), 
+                0 0 30px rgba(0, 162, 255, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            z-index: 1001;
+            backdrop-filter: blur(25px);
+            text-align: center;
+            opacity: 0;
+        }
+        .system-notification.show {
+            top: 30px;
+            opacity: 1;
+        }
+        .system-notification-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            display: block;
+            text-shadow: 0 0 15px rgba(0, 162, 255, 0.8);
+        }
+        .system-notification-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #00a2ff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 10px rgba(0, 162, 255, 0.5);
+        }
+        .system-notification-message {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.4;
+            color: #e8e8e8;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) { body{padding:1rem;} .rack{padding:1.5rem;} .segment-controls{flex-direction:row; justify-content:center; gap:0.8rem;} .segment-btn{width:130px !important; font-size:0.8rem;} .knob{width:100px;height:100px;} .knob-indicator{top:6px;height:25px;transform-origin:center 44px;} .notification{min-width:280px;right:10px;transform:translateX(320px);} .advance-btn{max-width:320px; font-size:0.8rem;} }
+        @media (max-width: 480px) { .notification{min-width:260px;font-size:.85rem;} .advance-btn{max-width:280px; font-size:0.75rem; letter-spacing:0px;} .segment-btn{width:120px !important; font-size:0.75rem;} .segment-controls{gap:0.6rem;} }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="rack" id="mainRack" class="powered-off">
+            <div class="rack-header">
+                <div class="rack-name">FASE 1</div>
+                <div class="rack-number" id="powerBtn">OFF</div>
+            </div>
+            <div class="segment-controls">
+                <button class="segment-btn" data-segment="producer" id="producerBtn">Produtor</button>
+                <button class="segment-btn" data-segment="artist" id="artistBtn">Artista</button>
+            </div>
+            <div class="segment-support">Você pode selecionar os dois, se for o seu caso.</div>
+            <div class="knob-section">
+                <div class="knob-label">Destravar Mixagem Dinâmica</div>
+                <div class="knob" id="mainKnob">
+                    <div class="knob-indicator"></div>
+                </div>
+                <div class="knob-value" id="knobValue">0%</div>
+            </div>
+            <div class="vu-section">
+                <div class="vu-label">Progresso de Ativação</div>
+                <div class="vu-meter"><div class="vu-bar" id="progressBar"></div></div>
+                <div class="progress-text" id="progressText">Selecione seu perfil e gire o knob para começar...</div>
+            </div>
+            <div class="leds">
+                <div class="led-group"><div class="led" id="powerLed"></div><span class="led-label">PWR</span></div>
+                <div class="led-group"><div class="led" id="processLed"></div><span class="led-label">PROC</span></div>
+                <div class="led-group"><div class="led" id="completeLed"></div><span class="led-label">RDY</span></div>
+            </div>
+            <div class="advance-section">
+                <button class="advance-btn" id="advanceBtn">🔒 Selecione um perfil para começar</button>
+            </div>
+        </div>
+    </div>
+    <div class="notification" id="notification"></div>
+    <div class="system-notification" id="systemNotification"></div>
+    <script>
+        let selectedSegments = new Set();
+        let isDragging = false;
+        let currentRotation = 0;
+        let progress = 0;
+        let lastProgress = 0; // Usado para determinar a direção do knob
+        let lastAngle = 0;
+        let isMovingForward = true;
+        let audioContext = null;
+        let isNotificationActive = false;
+        let isPoweredOn = false; // Novo estado para controlar se o sistema está ligado
+        let welcomeNotificationShown = false; // CORREÇÃO 1: Flag para controlar a notificação inicial
+        const producerBtn = document.getElementById('producerBtn');
+        const artistBtn = document.getElementById('artistBtn');
+        const mainKnob = document.getElementById('mainKnob');
+        const knobIndicator = mainKnob.querySelector('.knob-indicator');
+        const knobValue = document.getElementById('knobValue');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const powerLed = document.getElementById('powerLed');
+        const processLed = document.getElementById('processLed');
+        const completeLed = document.getElementById('completeLed');
+        const advanceBtn = document.getElementById('advanceBtn');
+        const mainRack = document.getElementById('mainRack');
+        const powerBtn = document.getElementById('powerBtn'); // Novo botão de power
+        const notificationEl = document.getElementById('notification');
+        const systemNotificationEl = document.getElementById('systemNotification'); // Nova notificação de sistema
+        
+        // NOTIFICAÇÕES ORIGINAIS EM PORTUGUÊS (RESTAURADO)
+        const notificationsContent = {
+            producer: [
+                { type: 'positive', icon: '💰', title: 'Novo Cliente', message: 'Cliente confirmou projeto de mixagem' },
+                { type: 'positive', icon: '🎵', title: 'Projeto Concluído', message: 'Mixagem entregue com sucesso' },
+                { type: 'positive', icon: '📈', title: 'Reputação', message: 'Sua autoridade no mercado aumentou' },
+                { type: 'negative', icon: '❌', title: 'Projeto Cancelado', message: 'Cliente cancelou o projeto' },
+                { type: 'negative', icon: '💸', title: 'Orçamento Rejeitado', message: 'Proposta não foi aceita' },
+                { type: 'negative', icon: '⚠️', title: 'Problema Técnico', message: 'Equipamento com falha' }
+            ],
+            artist: [
+                { type: 'positive', icon: '🎵', title: 'Spotify', message: 'Sua música bateu 10k streams hoje!' },
+                { type: 'positive', icon: '⭐', title: 'Playlist Oficial', message: 'Você foi destaque em uma playlist' },
+                { type: 'positive', icon: '🔥', title: 'Nova Oportunidade', message: 'Convite para feat disponível' },
+                { type: 'negative', icon: '📉', title: 'Streams Caíram', message: 'Engagement diminuiu hoje' },
+                { type: 'negative', icon: '❌', title: 'Playlist Removida', message: 'Sua música foi removida' },
+                { type: 'negative', icon: '💔', title: 'Feat Cancelado', message: 'Colaboração foi cancelada' }
+            ]
+        };
+        const progressTexts = [ "Selecione seu perfil e gire o knob para começar...", "Iniciando sistema...", "Otimizando frequências...", "Ajustando espacialidade...", "Sistema de Mixagem Dinâmica Ativado!" ];
+        function initializeAudio() { try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { console.warn('Web Audio API não suportada'); } }
+        
+        // Listener para desbloquear AudioContext no primeiro clique
+        document.addEventListener('click', () => {
+          if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+          }
+        }, { once: true });
+        
+        function initializeEventListeners() {
+            powerBtn.addEventListener('click', (e) => { e.preventDefault(); togglePower(); });
+            producerBtn.addEventListener('click', (e) => { e.preventDefault(); if (isPoweredOn) toggleSegment('producer'); });
+            artistBtn.addEventListener('click', (e) => { e.preventDefault(); if (isPoweredOn) toggleSegment('artist'); });
+            mainKnob.addEventListener('mousedown', startKnobDrag); mainKnob.addEventListener('touchstart', startKnobDrag, { passive: false });
+            document.addEventListener('mousemove', dragKnob); document.addEventListener('mouseup', stopKnobDrag);
+            document.addEventListener('touchmove', dragKnob, { passive: false }); document.addEventListener('touchend', stopKnobDrag);
+            advanceBtn.addEventListener('click', (e) => { e.preventDefault(); if (isPoweredOn) advanceToNextStage(); });
+        }
+        function getAngleFromCenter(centerX, centerY, pointX, pointY) { return Math.atan2(pointY - centerY, pointX - centerX) * (180 / Math.PI); }
+        
+        function togglePower() {
+            isPoweredOn = !isPoweredOn;
+            updatePowerState();
+            playButtonSound();
+        }
+        
+        function updatePowerState() {
+            if (isPoweredOn) {
+                powerBtn.textContent = 'ON';
+                powerBtn.classList.add('powered-on');
+                mainRack.classList.remove('powered-off');
+                showSystemNotification('🎮', 'PARABÉNS', 'Você conseguiu ativar!');
+            } else {
+                powerBtn.textContent = 'OFF';
+                powerBtn.classList.remove('powered-on');
+                mainRack.classList.add('powered-off');
+                // Reset de tudo quando desliga
+                selectedSegments.clear();
+                updateSegmentButtons();
+                resetProgress();
+                powerLed.classList.remove('power-on');
+                mainRack.classList.remove('active');
+                showSystemNotification('🔌', 'SISTEMA DESATIVADO', 'Todos os parâmetros foram resetados');
+            }
+            updateAdvanceButton();
+        }
+        
+        function toggleSegment(segment) {
+            if (!isPoweredOn) return; // Só funciona se estiver ligado
+            selectedSegments.has(segment) ? selectedSegments.delete(segment) : selectedSegments.add(segment);
+            updateSegmentButtons(); updateSystemState(); playButtonSound();
+        }
+        function updateSegmentButtons() {
+            const bothSelected = selectedSegments.size === 2;
+            producerBtn.classList.remove('active', 'both-selected'); artistBtn.classList.remove('active', 'both-selected');
+            if (selectedSegments.has('producer')) producerBtn.classList.add(bothSelected ? 'both-selected' : 'active');
+            if (selectedSegments.has('artist')) artistBtn.classList.add(bothSelected ? 'both-selected' : 'active');
+        }
+        function updateSystemState() {
+            if (selectedSegments.size > 0) { powerLed.classList.add('power-on'); mainRack.classList.add('active'); }
+            else { powerLed.classList.remove('power-on'); mainRack.classList.remove('active'); resetProgress(); }
+            updateProgressText(); updateAdvanceButton();
+        }
+        function startKnobDrag(e) {
+            if (selectedSegments.size === 0 || !isPoweredOn) return; // Knob só funciona se um perfil estiver selecionado E se estiver ligado
+            // e.preventDefault(); // Manter e.preventDefault() no mousedown/touchstart
+            isDragging = true;
+            const rect = mainKnob.getBoundingClientRect(); const centerX = rect.left + rect.width / 2; const centerY = rect.top + rect.height / 2;
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            lastAngle = getAngleFromCenter(centerX, centerY, clientX, clientY);
+            mainKnob.classList.add('dragging', 'active'); playKnobClickSound(); if ('vibrate' in navigator) navigator.vibrate(5);
+        }
+        function dragKnob(e) {
+            if (!isDragging || selectedSegments.size === 0 || !isPoweredOn) return;
+            if (e.cancelable) e.preventDefault(); // Adicionado para previnir scroll em touch
+            
+            const rect = mainKnob.getBoundingClientRect(); const centerX = rect.left + rect.width / 2; const centerY = rect.top + rect.height / 2;
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const currentAngle = getAngleFromCenter(centerX, centerY, clientX, clientY);
+            let angleDiff = currentAngle - lastAngle;
+            if (angleDiff > 180) angleDiff -= 360; if (angleDiff < -180) angleDiff += 360;
+            
+            let newRotation = currentRotation + angleDiff;
+            newRotation = Math.max(0, Math.min(720, newRotation)); // Clampa entre 0 e 720
+            if (Math.abs(newRotation - currentRotation) > 0.1) { // Adiciona um pequeno limiar para evitar processamento desnecessário
+                currentRotation = newRotation;
+                lastProgress = progress; // Atualiza lastProgress antes de recalcular progress
+                progress = (currentRotation / 720) * 100;
+                isMovingForward = progress > lastProgress;
+                
+                knobIndicator.style.transform = `translateX(-50%) rotate(${currentRotation}deg)`;
+                updateProgress(); updateKnobValue();
+                
+                if (progress > 0 && !processLed.classList.contains('processing')) processLed.classList.add('processing');
+                else if (progress === 0 && processLed.classList.contains('processing')) processLed.classList.remove('processing');
+                if (Math.random() < 0.08 && Math.abs(progress - lastProgress) > 1.5) showRandomNotification();
+            }
+            lastAngle = currentAngle;
+        }
+        function stopKnobDrag() {
+            if (isDragging) { mainKnob.classList.remove('dragging'); playKnobReleaseSound(); }
+            isDragging = false;
+        }
+        function updateKnobValue() { knobValue.textContent = Math.round(progress) + '%'; }
+        function updateProgress() {
+            progressBar.style.width = progress + '%'; updateProgressText(); updateAdvanceButton();
+            if (progress > 80) { progressBar.style.background = 'linear-gradient(90deg, #ffff00 0%, #ff8000 50%, #ff0000 100%)'; progressBar.style.boxShadow = '0 0 15px rgba(255,0,0,0.6)'; }
+            else if (progress > 50) { progressBar.style.background = 'linear-gradient(90deg, #00ff00 0%, #ffff00 70%, #ff8000 100%)'; progressBar.style.boxShadow = '0 0 12px rgba(255,255,0,0.5)'; }
+            else { progressBar.style.background = 'linear-gradient(90deg, #00ff00 0%, #00ff00 60%, #ffff00 100%)'; progressBar.style.boxShadow = '0 0 12px rgba(0,255,0,0.4)'; }
+            if (progress >= 100 && !completeLed.classList.contains('complete')) completeSystem();
+            else if (progress < 100 && completeLed.classList.contains('complete')) completeLed.classList.remove('complete');
+        }
+        function updateProgressText() {
+            let textIndex = 0;
+            if (selectedSegments.size === 0) textIndex = 0;
+            else if (progress === 0 && selectedSegments.size > 0) textIndex = 1;
+            else if (progress < 25) textIndex = 1; else if (progress < 50) textIndex = 2;
+            else if (progress < 100) textIndex = 3; else textIndex = 4;
+            progressText.textContent = progressTexts[textIndex];
+        }
+        function updateAdvanceButton() {
+            advanceBtn.classList.remove('enabled'); advanceBtn.removeAttribute('data-completed-notification');
+            if (!isPoweredOn) {
+                advanceBtn.textContent = '🔌 SISTEMA DESLIGADO';
+            }
+            else if (selectedSegments.size === 0) { 
+                advanceBtn.textContent = '🔒 Selecione um perfil para começar'; 
+            }
+            else if (selectedSegments.size > 0 && progress === 0) { 
+                advanceBtn.textContent = '🔒 GIRE O BOTÃO PARA DESTRAVAR'; 
+            }
+            else if (progress >= 100) { 
+                advanceBtn.classList.add('enabled'); 
+                advanceBtn.textContent = '🔓 CONTINUAR'; 
+                if (!advanceBtn.hasAttribute('data-completed-notification')) { 
+                    setTimeout(showCompletionNotification, 500); 
+                    advanceBtn.setAttribute('data-completed-notification', 'true'); 
+                } 
+            }
+            else { 
+                const remaining = Math.round(100 - progress); 
+                advanceBtn.textContent = `🔒 FALTAM ${remaining}% PARA DESTRAVAR`; 
+            }
+        }
+        function resetProgress() {
+            progress = 0; lastProgress = 0; currentRotation = 0;
+            knobIndicator.style.transform = 'translateX(-50%) rotate(0deg)'; knobValue.textContent = '0%'; progressBar.style.width = '0%';
+            processLed.classList.remove('processing'); completeLed.classList.remove('complete'); mainKnob.classList.remove('active');
+            updateProgressText(); updateAdvanceButton();
+        }
+        function completeSystem() { completeLed.classList.add('complete'); playCompletionSound(); }
+        function showRandomNotification() {
+            if (isNotificationActive) return; const availableSegments = Array.from(selectedSegments); if (availableSegments.length === 0) return;
+            const randomSegment = availableSegments[Math.floor(Math.random() * availableSegments.length)];
+            const segmentNotifications = notificationsContent[randomSegment]; // Usar notificationsContent
+            const filteredNotifications = segmentNotifications.filter(n => isMovingForward ? n.type === 'positive' : n.type === 'negative');
+            if (filteredNotifications.length === 0) return; isNotificationActive = true;
+            const randomNotification = filteredNotifications[Math.floor(Math.random() * filteredNotifications.length)];
+            showNotification(randomNotification);
+        }
+        
+        // Função showSystemNotification SEM SOM
+        function showSystemNotification(icon, title, message) {
+            // Primeiro esconde se já estiver visível
+            systemNotificationEl.classList.remove('show');
+            
+            setTimeout(() => {
+                systemNotificationEl.innerHTML = `
+                    <div class="system-notification-icon">${icon}</div>
+                    <div class="system-notification-title">${title}</div>
+                    <div class="system-notification-message">${message}</div>
+                `;
+                systemNotificationEl.classList.add('show');
+                
+                // SOM REMOVIDO - não toca mais som
+                
+                setTimeout(() => {
+                    systemNotificationEl.classList.remove('show');
+                }, 3200);
+            }, 100);
+        }
+        
+        function showNotification(notificationData) {
+            notificationEl.className = `notification ${notificationData.type}`; // Usar notificationEl
+            notificationEl.innerHTML = `<div class="notification-icon">${notificationData.icon}</div><div class="notification-content"><div class="notification-title">${notificationData.title}</div><div class="notification-message">${notificationData.message}</div></div>`;
+            notificationEl.classList.add('show');
+            setTimeout(() => { notificationEl.classList.remove('show'); setTimeout(() => isNotificationActive = false, 400); }, 3000);
+            playNotificationSound();
+        }
+        function showCompletionNotification() { showNotification({ type: 'completion', icon: '🏆', title: 'Sistema Voxy Mix', message: 'Mixagem Dinâmica Ativada com Sucesso!' }); }
+        function advanceToNextStage() {
+            if (!isPoweredOn) { 
+                showSystemNotification('🔌', 'ATENÇÃO', 'Você precisa ativar o sistema primeiro!'); 
+                return; 
+            }
+            if (progress < 100) { showNotification({ type: 'negative', icon: '⏳', title: 'Quase lá!', message: `Faltam apenas ${Math.round(100 - progress)}% para desbloquear!` }); return; }
+            playButtonSound(); showNotification({ type: 'completion', icon: '🚀', title: 'Incrível!', message: 'Você dominou o sistema! Próximo nível desbloqueado!' });
+            setTimeout(() => { alert('🎉 PARABÉNS!\n\nVocê completou com sucesso o Sistema de Mixagem Dinâmica!\n\n✨ Próximo desafio carregando...'); }, 1000);
+        }
+        
+        // ===== SONS CORRIGIDOS =====
+        function playButtonSound() {
+            if (!audioContext) return;
+            if (audioContext.state === 'suspended') audioContext.resume();
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {}
+        }
+        function playKnobClickSound() {
+            if (!audioContext) return;
+            if (audioContext.state === 'suspended') audioContext.resume();
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.08);
+            } catch (e) {}
+        }
+        function playKnobReleaseSound() {
+            if (!audioContext) return;
+            if (audioContext.state === 'suspended') audioContext.resume();
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {}
+        }
+        
+        function playNotificationSound() {
+            if (!audioContext) return;
+            if (audioContext.state === 'suspended') audioContext.resume();
+            try {
+                const frequencies = [523, 659, 784]; // C5, E5, G5
+                frequencies.forEach((freq, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    const startTime = audioContext.currentTime + (index * 0.1);
+                    oscillator.frequency.setValueAtTime(freq, startTime);
+                    gainNode.gain.setValueAtTime(0.15, startTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 0.3);
+                });
+            } catch (e) {}
+        }
+        
+        function playCompletionSound() {
+            if (!audioContext) return;
+            if (audioContext.state === 'suspended') audioContext.resume();
+            try {
+                // Play a completion chord - C major
+                const frequencies = [523, 659, 784, 1047]; // C5, E5, G5, C6
+                frequencies.forEach((freq, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    const startTime = audioContext.currentTime + (index * 0.05);
+                    oscillator.frequency.setValueAtTime(freq, startTime);
+                    gainNode.gain.setValueAtTime(0.1, startTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 0.8);
+                });
+            } catch (e) {}
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => { 
+            initializeAudio(); 
+            initializeEventListeners(); 
+            // Inicializar como desligado
+            mainRack.classList.add('powered-off');
+            updateAdvanceButton(); 
+            
+            // CORREÇÃO 1: Notificação inicial de boas-vindas controlada por flag
+            if (!welcomeNotificationShown) {
+                setTimeout(() => {
+                    showSystemNotification('🎯', 'FASE 1', 'Descubra como ativar o sistema');
+                    welcomeNotificationShown = true;
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

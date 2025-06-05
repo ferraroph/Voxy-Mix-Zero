@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio 4 - Presets Dinâmicos - Voxy Mix</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            user-select: none; 
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(0, 255, 136, 0.02) 0%, transparent 60%),
+                radial-gradient(circle at 80% 70%, rgba(0, 162, 255, 0.02) 0%, transparent 60%),
+                linear-gradient(180deg, #0a0a0a 0%, #111111 25%, #0f0f0f 75%, #0a0a0a 100%);
+            color: #e8e8e8; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 1rem;
+        }
+        
+        body::before {
+            content: ''; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0);
+            background-size: 20px 20px; 
+            pointer-events: none; 
+            opacity: 0.3; 
+            z-index: -1;
+        }
+        
+        /* ===== CONTAINER PRINCIPAL ===== */
+        .main-container { 
+            max-width: 900px; 
+            width: 100%; 
+            position: relative; 
+            z-index: 1;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        /* ===== HEADER ===== */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .progress-indicator {
+            position: absolute;
+            top: -10px;
+            right: 0;
+            background: rgba(0, 255, 136, 0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.5);
+        }
+        
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ff88, #00a2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        
+        /* ===== SISTEMA DE PONTUAÇÃO RECUPERADO ===== */
+        .score-container {
+            max-width: 400px;
+            margin: 0 auto 2rem;
+            background: rgba(0, 255, 136, 0.1);
+            padding: 1rem;
+            border-radius: 15px;
+            border: 2px solid rgba(0, 255, 136, 0.3);
+        }
+        
+        .score-label {
+            font-size: 0.9rem;
+            color: #00ff88;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        
+        .score-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00a2ff);
+            width: 25%;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .score-fill.recovering {
+            animation: scoreRecover 1.5s ease-out;
+        }
+        
+        @keyframes scoreRecover {
+            0% { width: 25%; }
+            100% { width: 100%; }
+        }
+        
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        
+        /* ===== LAYOUT EM 4 SEÇÕES ===== */
+        .interface-container {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .interface-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(0, 255, 136, 0.02) 0%,
+                transparent 50%,
+                rgba(0, 162, 255, 0.02) 100%
+            );
+            pointer-events: none;
+        }
+        
+        /* ===== SEÇÃO 1: TRANSIENTE VISUAL ===== */
+        .transient-display {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .transient-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .waveform-container {
+            height: 80px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            padding: 10px;
+        }
+        
+        .waveform-bar {
+            width: 4px;
+            background: linear-gradient(180deg, #ff4444, #ff8800);
+            transition: all 0.5s ease;
+            border-radius: 2px;
+        }
+        
+        .waveform-bar.improving {
+            background: linear-gradient(180deg, #00ff88, #00a2ff);
+            animation: waveImprove 0.8s ease-out;
+        }
+        
+        @keyframes waveImprove {
+            0% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1.2); }
+            100% { transform: scaleY(1); }
+        }
+        
+        /* ===== SEÇÃO 2: FEEDBACK BOX ===== */
+        .feedback-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .feedback-text {
+            font-size: 0.9rem;
+            color: #ccc;
+            transition: all 0.3s ease;
+        }
+        
+        .feedback-text.success {
+            color: #00ff88;
+            font-weight: bold;
+            animation: feedbackGlow 0.5s ease-out;
+        }
+        
+        @keyframes feedbackGlow {
+            0% { text-shadow: none; }
+            50% { text-shadow: 0 0 10px rgba(0, 255, 136, 0.8); }
+            100% { text-shadow: 0 0 5px rgba(0, 255, 136, 0.4); }
+        }
+        
+        /* ===== SEÇÃO 3: PROBLEMAS VOCAIS ===== */
+        .problems-section {
+            margin-bottom: 2rem;
+        }
+        
+        .problems-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        
+        .problems-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .problem-item {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+        
+        .problem-item.solved {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: rgba(0, 255, 136, 0.3);
+            animation: problemSolved 0.8s ease-out;
+        }
+        
+        @keyframes problemSolved {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .problem-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .problem-name {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #ff8888;
+            transition: color 0.5s ease;
+        }
+        
+        .problem-item.solved .problem-name {
+            color: #00ff88;
+        }
+        
+        .problem-item.solved .problem-icon::after {
+            content: ' ✓';
+            color: #00ff88;
+        }
+        
+        /* ===== SEÇÃO 4: CONTROLES DE KNOB ===== */
+        .controls-section {
+            opacity: 1;
+            transition: all 0.8s ease;
+        }
+        
+        .controls-section.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+        
+        .controls-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        
+        .knobs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .knob-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .knob-control:hover {
+            transform: translateY(-2px);
+        }
+        
+        .knob-visual {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .knob-visual:hover {
+            border-color: rgba(0, 162, 255, 0.5);
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.3);
+        }
+        
+        .knob-visual.correct:hover {
+            border-color: rgba(0, 255, 136, 0.5);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        .knob-indicator {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 20px;
+            background: #00a2ff;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .knob-visual.correct .knob-indicator {
+            background: #00ff88;
+        }
+        
+        .knob-label {
+            font-size: 0.8rem;
+            color: #ccc;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* ===== BOTÃO CONTINUAR ===== */
+        .success-section {
+            text-align: center;
+            margin-top: 2rem;
+            opacity: 0;
+            transition: all 0.8s ease;
+        }
+        
+        .success-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .success-message {
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid rgba(0, 255, 136, 0.5);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            animation: successPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes successPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.02); }
+        }
+        
+        .success-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 0.5rem;
+        }
+        
+        .success-subtitle {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        .continue-btn {
+            padding: 1.2rem 3rem;
+            background: linear-gradient(135deg, #00ff88, #00a2ff);
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+        }
+        
+        .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 255, 136, 0.6);
+        }
+        
+        /* ===== ANIMAÇÕES ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ===== MOBILE ===== */
+        @media (max-width: 768px) {
+            .knobs-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .knob-visual {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .title {
+                font-size: 1.5rem;
+            }
+            
+            .problems-grid {
+                gap: 0.8rem;
+            }
+            
+            .problem-item {
+                padding: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <div class="progress-indicator">Etapa 6/7</div>
+            <h1 class="title">Presets Dinâmicos</h1>
+            <p class="subtitle">Tecnologia que se adapta ao SEU som</p>
+        </div>
+        
+        <!-- Sistema de Pontuação -->
+        <div class="score-container">
+            <div class="score-label">Sistema de Energia Recuperando</div>
+            <div class="score-bar">
+                <div class="score-fill" id="scoreFill">
+                    <div class="score-text" id="scoreText">25/100</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Interface Principal -->
+        <div class="interface-container">
+            <!-- Seção 1: Transiente Visual -->
+            <div class="transient-display">
+                <div class="transient-label">Análise de Transientes</div>
+                <div class="waveform-container" id="waveformContainer">
+                    <!-- Barras serão inseridas dinamicamente -->
+                </div>
+            </div>
+            
+            <!-- Seção 2: Feedback Box -->
+            <div class="feedback-box">
+                <div class="feedback-text" id="feedbackText">
+                    Problemas detectados. Ajuste os controles dinâmicos...
+                </div>
+            </div>
+            
+            <!-- Seção 3: Problemas Vocais -->
+            <div class="problems-section">
+                <div class="problems-label">Problemas Identificados</div>
+                <div class="problems-grid" id="problemsGrid">
+                    <!-- Problemas serão inseridos dinamicamente -->
+                </div>
+            </div>
+            
+            <!-- Seção 4: Controles de Knob -->
+            <div class="controls-section" id="controlsSection">
+                <div class="controls-label">Controles Dinâmicos Voxy Mix</div>
+                <div class="knobs-grid" id="knobsGrid">
+                    <!-- Knobs serão inseridos dinamicamente -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção de Sucesso -->
+        <div class="success-section" id="successSection">
+            <div class="success-message">
+                <div class="success-title">🎯 Preset Dinâmico Otimizado!</div>
+                <div class="success-subtitle">Sua voz foi automaticamente calibrada para qualidade profissional</div>
+            </div>
+            <button class="continue-btn" id="continueBtn">
+                Acessar Método Completo
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // ===== DADOS DO USUÁRIO =====
+        const userData = JSON.parse(localStorage.getItem('voxyMixUserData') || '{}');
+        const dnaMusical = userData.etapa2 || { fama: 50, dinheiro: 50, precisao: 50, velocidade: 50 };
+        const segmento = userData.etapa3?.segmento || 'ambos';
+        const previousScore = userData.etapa5?.score || 25;
+        
+        // ===== SISTEMA DE PONTUAÇÃO =====
+        let currentScore = previousScore;
+        let hasCompleted = false;
+        
+        // ===== MATRIZ DE PROBLEMAS E SOLUÇÕES =====
+        function getVocalProblems() {
+            const problems = [];
+            
+            // Problema 1: Baseado no segmento e DNA
+            if (segmento === 'artista' || segmento === 'ambos') {
+                if (dnaMusical.fama > 60) {
+                    problems.push({ id: 'muddy', icon: '🔇', name: 'Som Abafado' });
+                } else if (dnaMusical.precisao > 60) {
+                    problems.push({ id: 'harsh', icon: '⚡', name: 'Frequências Ásperas' });
+                } else {
+                    problems.push({ id: 'thin', icon: '📻', name: 'Voz Fina' });
+                }
+            } else {
+                if (dnaMusical.velocidade > 60) {
+                    problems.push({ id: 'muddy', icon: '🔇', name: 'Som Abafado' });
+                } else {
+                    problems.push({ id: 'dull', icon: '😴', name: 'Sem Brilho' });
+                }
+            }
+            
+            // Problema 2: Sempre relacionado a timing/dinâmica
+            if (dnaMusical.velocidade > 60) {
+                problems.push({ id: 'timing', icon: '⏱️', name: 'Timing Irregular' });
+            } else if (dnaMusical.dinheiro > 60) {
+                problems.push({ id: 'dynamics', icon: '📈', name: 'Dinâmica Perdida' });
+            } else {
+                problems.push({ id: 'presence', icon: '👤', name: 'Falta Presença' });
+            }
+            
+            return problems;
+        }
+        
+        function getKnobControls() {
+            const knobs = [];
+            
+            // Knob 1: Sempre correto - baseado no primeiro problema
+            const problems = getVocalProblems();
+            const firstProblem = problems[0].id;
+            
+            switch(firstProblem) {
+                case 'muddy':
+                    knobs.push({ id: 'clarify', label: 'Clarear', correct: true, targetProblem: 'muddy' });
+                    break;
+                case 'harsh':
+                    knobs.push({ id: 'smooth', label: 'Suavizar', correct: true, targetProblem: 'harsh' });
+                    break;
+                case 'thin':
+                    knobs.push({ id: 'fatten', label: 'Encorpar', correct: true, targetProblem: 'thin' });
+                    break;
+                case 'dull':
+                    knobs.push({ id: 'brighten', label: 'Avivar', correct: true, targetProblem: 'dull' });
+                    break;
+            }
+            
+            // Knob 2: Sempre correto - baseado no segundo problema
+            const secondProblem = problems[1].id;
+            
+            switch(secondProblem) {
+                case 'timing':
+                    knobs.push({ id: 'sync', label: 'Sincronizar', correct: true, targetProblem: 'timing' });
+                    break;
+                case 'dynamics':
+                    knobs.push({ id: 'compress', label: 'Equilibrar', correct: true, targetProblem: 'dynamics' });
+                    break;
+                case 'presence':
+                    knobs.push({ id: 'enhance', label: 'Realçar', correct: true, targetProblem: 'presence' });
+                    break;
+            }
+            
+            // Knobs 3 e 4: Neutros/decorativos
+            knobs.push({ id: 'reverb', label: 'Ambiência', correct: false });
+            knobs.push({ id: 'delay', label: 'Delay', correct: false });
+            
+            return knobs;
+        }
+        
+        // ===== INICIALIZAÇÃO =====
+        function init() {
+            createWaveform();
+            renderProblems();
+            renderKnobs();
+            updateScore(currentScore);
+        }
+        
+        // ===== CRIAR WAVEFORM =====
+        function createWaveform() {
+            const container = document.getElementById('waveformContainer');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 30; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'waveform-bar';
+                bar.style.height = `${Math.random() * 40 + 20}%`;
+                container.appendChild(bar);
+            }
+        }
+        
+        // ===== RENDERIZAR PROBLEMAS =====
+        function renderProblems() {
+            const grid = document.getElementById('problemsGrid');
+            const problems = getVocalProblems();
+            
+            grid.innerHTML = '';
+            
+            problems.forEach(problem => {
+                const item = document.createElement('div');
+                item.className = 'problem-item';
+                item.id = `problem-${problem.id}`;
+                item.innerHTML = `
+                    <span class="problem-icon">${problem.icon}</span>
+                    <div class="problem-name">${problem.name}</div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+        
+        // ===== RENDERIZAR KNOBS =====
+        function renderKnobs() {
+            const grid = document.getElementById('knobsGrid');
+            const knobs = getKnobControls();
+            
+            grid.innerHTML = '';
+            
+            knobs.forEach((knob, index) => {
+                const control = document.createElement('div');
+                control.className = 'knob-control';
+                
+                control.innerHTML = `
+                    <div class="knob-visual ${knob.correct ? 'correct' : ''}" data-knob-id="${knob.id}">
+                        <div class="knob-indicator"></div>
+                    </div>
+                    <div class="knob-label">${knob.label}</div>
+                `;
+                
+                if (knob.correct) {
+                    control.addEventListener('click', () => handleCorrectKnob(knob));
+                } else {
+                    control.addEventListener('click', () => handleNeutralKnob(knob));
+                }
+                
+                grid.appendChild(control);
+            });
+        }
+        
+        // ===== LIDAR COM KNOB CORRETO =====
+        function handleCorrectKnob(knob) {
+            if (hasCompleted) return;
+            
+            // Marcar problema como resolvido
+            const problemElement = document.getElementById(`problem-${knob.targetProblem}`);
+            if (problemElement) {
+                problemElement.classList.add('solved');
+            }
+            
+            // Melhorar waveform
+            const waveformBars = document.querySelectorAll('.waveform-bar');
+            waveformBars.forEach(bar => {
+                bar.classList.add('improving');
+            });
+            
+            // Feedback positivo
+            const feedbackText = document.getElementById('feedbackText');
+            feedbackText.textContent = `✨ ${knob.label} aplicado! Melhoria detectada...`;
+            feedbackText.classList.add('success');
+            
+            // Som de sucesso
+            playSuccessSound();
+            
+            // Recuperar pontuação
+            updateScore(Math.min(100, currentScore + 37));
+            
+            // Verificar se todos os problemas foram resolvidos
+            setTimeout(() => {
+                checkAllProblemsResolved();
+            }, 1000);
+        }
+        
+        // ===== LIDAR COM KNOB NEUTRO =====
+        function handleNeutralKnob(knob) {
+            if (hasCompleted) return;
+            
+            // Feedback neutro
+            const feedbackText = document.getElementById('feedbackText');
+            feedbackText.textContent = `${knob.label} ajustado. Continue otimizando...`;
+            feedbackText.classList.remove('success');
+            
+            // Som neutro
+            playNeutralSound();
+        }
+        
+        // ===== VERIFICAR TODOS OS PROBLEMAS RESOLVIDOS =====
+        function checkAllProblemsResolved() {
+            const allProblems = document.querySelectorAll('.problem-item');
+            const solvedProblems = document.querySelectorAll('.problem-item.solved');
+            
+            if (solvedProblems.length >= 2) { // Pelo menos 2 problemas resolvidos
+                completeSuccess();
+            }
+        }
+        
+        // ===== COMPLETAR SUCESSO =====
+        function completeSuccess() {
+            if (hasCompleted) return;
+            hasCompleted = true;
+            
+            // Recuperar pontuação total
+            updateScore(100);
+            
+            // Feedback final
+            const feedbackText = document.getElementById('feedbackText');
+            feedbackText.textContent = '🎯 Preset Dinâmico calibrado perfeitamente!';
+            feedbackText.classList.add('success');
+            
+            // Ocultar controles
+            document.getElementById('controlsSection').classList.add('hidden');
+            
+            // Mostrar seção de sucesso
+            setTimeout(() => {
+                document.getElementById('successSection').classList.add('show');
+            }, 1000);
+            
+            // Som de vitória
+            playVictorySound();
+        }
+        
+        // ===== ATUALIZAR PONTUAÇÃO =====
+        function updateScore(newScore) {
+            currentScore = newScore;
+            const fill = document.getElementById('scoreFill');
+            const text = document.getElementById('scoreText');
+            
+            text.textContent = `${currentScore}/100`;
+            fill.style.width = `${currentScore}%`;
+            
+            if (currentScore >= 100) {
+                fill.classList.add('recovering');
+            }
+        }
+        
+        // ===== SONS =====
+        function playSuccessSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Som de sucesso: acorde perfeito
+            const frequencies = [261.63, 329.63, 392.00]; // C4, E4, G4
+            
+            frequencies.forEach((freq, index) => {
+                const osc = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                
+                osc.start(audioContext.currentTime + index * 0.1);
+                osc.stop(audioContext.currentTime + 0.8 + index * 0.1);
+            });
+        }
+        
+        function playNeutralSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            const osc = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            osc.frequency.setValueAtTime(440, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            osc.start(audioContext.currentTime);
+            osc.stop(audioContext.currentTime + 0.2);
+        }
+        
+        function playVictorySound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Sequência ascendente de notas
+            const sequence = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+            
+            sequence.forEach((freq, index) => {
+                const osc = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                osc.start(audioContext.currentTime + index * 0.1);
+                osc.stop(audioContext.currentTime + 0.3 + index * 0.1);
+            });
+        }
+        
+        // ===== CONTINUAR =====
+        document.getElementById('continueBtn').addEventListener('click', () => {
+            // Salvar estado
+            const currentData = {
+                ...userData,
+                etapa6: {
+                    completed: true,
+                    score: currentScore,
+                    timestamp: Date.now(),
+                    problems_solved: document.querySelectorAll('.problem-item.solved').length
+                }
+            };
+            
+            localStorage.setItem('voxyMixUserData', JSON.stringify(currentData));
+            
+            // Simular redirecionamento para oferta final
+            alert('Redirecionando para o acesso completo ao Voxy Mix...');
+        });
+        
+        // ===== INICIALIZAR =====
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voxy Mix - Experiência Interativa</title>
+    <style>
+        /* ===== RESET E BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 162, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 132, 255, 0.02) 0%, transparent 50%),
+                linear-gradient(180deg, #0a0a0a 0%, #111111 25%, #0f0f0f 75%, #0a0a0a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ===== TEXTURA DE CARBONO ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.015) 1px, transparent 0);
+            background-size: 25px 25px;
+            pointer-events: none;
+            opacity: 0.4;
+            z-index: -1;
+        }
+
+        /* ===== CONTAINER PRINCIPAL ===== */
+        .login-container {
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== LOGO PLACEHOLDER ===== */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.2s forwards;
+        }
+
+        .logo-placeholder {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1.5rem;
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(0, 162, 255, 0.3), rgba(0, 132, 255, 0.1)),
+                linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border: 2px solid rgba(0, 162, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 
+                0 0 30px rgba(0, 162, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-placeholder::before {
+            content: '';
+            width: 60px;
+            height: 60px;
+            background: 
+                radial-gradient(circle, #00a2ff 0%, #0084ff 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 20px rgba(0, 162, 255, 0.8),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 20px rgba(0, 162, 255, 0.8),
+                    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 35px rgba(0, 162, 255, 1),
+                    0 0 50px rgba(0, 162, 255, 0.5),
+                    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        /* ===== TÍTULOS ===== */
+        .main-title {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.8rem;
+            background: linear-gradient(135deg, #ffffff, #00a2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 162, 255, 0.3);
+            letter-spacing: 1px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.4s forwards;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            text-align: center;
+            color: #cccccc;
+            margin-bottom: 3rem;
+            letter-spacing: 0.5px;
+            line-height: 1.4;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.6s forwards;
+        }
+
+        /* ===== FORMULÁRIO ===== */
+        .login-form {
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.8s forwards;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #cccccc;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 56px;
+            padding: 0 1.5rem;
+            background: 
+                linear-gradient(145deg, rgba(26, 26, 26, 0.8), rgba(15, 15, 15, 0.9));
+            border: 2px solid rgba(100, 100, 100, 0.3);
+            border-radius: 12px;
+            font-size: 1rem;
+            color: #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .form-input::placeholder {
+            color: #666666;
+            font-weight: 400;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #00a2ff;
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(0, 162, 255, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            background: 
+                linear-gradient(145deg, rgba(26, 26, 26, 0.9), rgba(15, 15, 15, 1));
+        }
+
+        .form-input:hover {
+            border-color: rgba(0, 162, 255, 0.5);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                0 0 10px rgba(0, 162, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        /* ===== SUGESTÃO DE SENHA ===== */
+        .password-suggestion {
+            font-size: 0.8rem;
+            color: #888888;
+            margin-top: 0.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .password-suggestion:hover {
+            color: #00a2ff;
+        }
+
+        .password-suggestion .suggestion-text {
+            color: #cccccc;
+            font-weight: 600;
+        }
+
+        /* ===== BOTÃO PRINCIPAL ===== */
+        .submit-button {
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(135deg, #00a2ff, #0084ff);
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 6px 20px rgba(0, 162, 255, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .submit-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 25px rgba(0, 162, 255, 0.6),
+                0 0 30px rgba(0, 162, 255, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .submit-button:hover::before {
+            left: 100%;
+        }
+
+        .submit-button:active {
+            transform: translateY(0);
+            transition: transform 0.1s ease;
+        }
+
+        .submit-button.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .submit-button.loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== NOTA INFERIOR ===== */
+        .footer-note {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #888888;
+            line-height: 1.4;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1s forwards;
+        }
+
+        /* ===== TELA DE SUCESSO ===== */
+        .success-screen {
+            display: none;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .success-screen.show {
+            display: block;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 2rem;
+            background: 
+                radial-gradient(circle, #00ff88 0%, #00cc66 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 0 30px rgba(0, 255, 136, 0.5),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            animation: successPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes successPulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 30px rgba(0, 255, 136, 0.5),
+                    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 40px rgba(0, 255, 136, 0.8),
+                    0 0 60px rgba(0, 255, 136, 0.3),
+                    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .success-icon::before {
+            content: '✓';
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .success-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .success-message {
+            font-size: 1rem;
+            color: #cccccc;
+            margin-bottom: 2.5rem;
+            line-height: 1.5;
+        }
+
+        .continue-button {
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 6px 20px rgba(0, 255, 136, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .continue-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 25px rgba(0, 255, 136, 0.6),
+                0 0 30px rgba(0, 255, 136, 0.4);
+        }
+
+        /* ===== ANIMAÇÕES ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVIDADE ===== */
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 1.5rem;
+                max-width: 400px;
+            }
+
+            .logo-placeholder {
+                width: 100px;
+                height: 100px;
+            }
+
+            .logo-placeholder::before {
+                width: 50px;
+                height: 50px;
+            }
+
+            .main-title {
+                font-size: 1.6rem;
+            }
+
+            .subtitle {
+                font-size: 0.9rem;
+            }
+
+            .form-input {
+                height: 52px;
+                font-size: 0.95rem;
+            }
+
+            .submit-button {
+                height: 56px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 1rem;
+            }
+
+            .main-title {
+                font-size: 1.4rem;
+                line-height: 1.2;
+            }
+
+            .subtitle {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* ===== EFEITOS DE PARTÍCULAS ===== */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(0, 162, 255, 0.5);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10%, 90% { 
+                opacity: 1;
+            }
+            50% { 
+                transform: translateY(-100vh) translateX(50px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- PARTÍCULAS DE FUNDO -->
+    <div class="particles" id="particles"></div>
+
+    <div class="login-container">
+        <!-- SEÇÃO DO LOGO -->
+        <div class="logo-section">
+            <div class="logo-placeholder"></div>
+            <h1 class="main-title">Parabéns, você recebeu um convite exclusivo</h1>
+            <p class="subtitle">Complete o desafio e ganhe <strong>ACESSO ANTECIPADO</strong> ao Voxy Mix - A ferramenta que irá <strong>REVOLUCIONAR O MERCADO DA MÚSICA</strong></p>
+        </div>
+
+        <!-- FORMULÁRIO DE ACESSO -->
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="email">E-mail</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input" 
+                    placeholder="Digite seu melhor e-mail"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Senha de Acesso</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-input" 
+                    placeholder="Crie sua senha ou use a sugestão abaixo"
+                    required
+                >
+                <div class="password-suggestion" id="passwordSuggestion">
+                    Sugestão: <span class="suggestion-text" id="suggestedPassword">V7x#m2K9</span> (clique para usar)
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button" id="submitBtn">
+                Começar Desafio
+            </button>
+        </form>
+
+        <!-- NOTA INFERIOR -->
+        <!-- Removida conforme solicitação -->
+
+        <!-- TELA DE SUCESSO -->
+        <div class="success-screen" id="successScreen">
+            <div class="success-icon"></div>
+            <h2 class="success-title">Sistema Ativado!</h2>
+            <p class="success-message">
+                Seu acesso foi liberado! Agora você está pronto para embarcar nesta experiência única do Voxy Mix.
+            </p>
+            <button class="continue-button" onclick="continueToNextStep()">
+                Entrar na Experiência
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ===== SISTEMA DE ACESSO VOXY MIX =====
+        
+        // Elementos do DOM
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const successScreen = document.getElementById('successScreen');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const passwordSuggestion = document.getElementById('passwordSuggestion');
+        const suggestedPassword = document.getElementById('suggestedPassword');
+
+        // Array de senhas sugeridas
+        const passwordSuggestions = [
+            'V7x#m2K9', 'P4@nW8qZ', 'M3$tR5oL', 'X9&fY2nU', 
+            'K8#pB4mS', 'Q6@vN7rT', 'Z3$cH9wE', 'L5&jD8xA'
+        ];
+
+        // ===== GERAÇÃO DE SENHA SUGERIDA =====
+        function generateRandomPassword() {
+            const randomIndex = Math.floor(Math.random() * passwordSuggestions.length);
+            return passwordSuggestions[randomIndex];
+        }
+
+        // ===== APLICAR SENHA SUGERIDA =====
+        function applySuggestedPassword() {
+            const password = suggestedPassword.textContent;
+            passwordInput.value = password;
+            passwordInput.focus();
+            
+            // Remove a sugestão completamente
+            passwordSuggestion.style.display = 'none';
+        }
+
+        // ===== PARTÍCULAS DE FUNDO =====
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 15;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (8 + Math.random() * 4) + 's';
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // ===== VALIDAÇÃO DE FORMULÁRIO =====
+        function validateForm() {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!isValidEmail(email)) {
+                showInputError(emailInput, 'Digite um e-mail válido');
+                return false;
+            }
+            
+            if (password.length < 6) {
+                showInputError(passwordInput, 'Senha deve ter pelo menos 6 caracteres');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function showInputError(input, message) {
+            const existingError = input.parentNode.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const errorElement = document.createElement('div');
+            errorElement.className = 'error-message';
+            errorElement.textContent = message;
+            errorElement.style.cssText = `
+                color: #ff4444;
+                font-size: 0.8rem;
+                margin-top: 0.5rem;
+                animation: fadeInUp 0.3s ease;
+            `;
+            
+            input.parentNode.appendChild(errorElement);
+            input.style.borderColor = '#ff4444';
+            
+            setTimeout(() => {
+                if (errorElement.parentNode) {
+                    errorElement.remove();
+                    input.style.borderColor = '';
+                }
+            }, 3000);
+        }
+
+        // ===== PROCESSAMENTO DO FORMULÁRIO =====
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+            
+            submitBtn.classList.add('loading');
+            submitBtn.innerHTML = 'Ativando Sistema...';
+            
+            setTimeout(() => {
+                showSuccessScreen();
+            }, 2000);
+        }
+
+        function showSuccessScreen() {
+            loginForm.style.display = 'none';
+            document.querySelector('.footer-note').style.display = 'none';
+            document.querySelector('.logo-section').style.display = 'none';
+            
+            successScreen.classList.add('show');
+            
+            playSuccessSound();
+        }
+
+        function continueToNextStep() {
+            alert('Redirecionando para sua experiência Voxy Mix personalizada...');
+        }
+
+        // ===== EFEITOS SONOROS =====
+        function playSuccessSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const frequencies = [523, 659, 784];
+                
+                frequencies.forEach((freq, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    const startTime = audioContext.currentTime + (index * 0.1);
+                    oscillator.frequency.setValueAtTime(freq, startTime);
+                    gainNode.gain.setValueAtTime(0.1, startTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5);
+                    
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 0.5);
+                });
+            } catch (e) {
+                // Fallback silencioso
+            }
+        }
+
+        // ===== EFEITOS VISUAIS NOS INPUTS =====
+        function addInputEffects() {
+            const inputs = document.querySelectorAll('.form-input');
+            
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentNode.style.transform = 'translateY(-2px)';
+                    this.parentNode.style.transition = 'transform 0.3s ease';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentNode.style.transform = 'translateY(0)';
+                });
+            });
+        }
+
+        // ===== EASTER EGG - SEQUÊNCIA SECRETA =====
+        let secretSequence = [];
+        const secretCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+
+        function handleSecretSequence(e) {
+            secretSequence.push(e.code);
+            
+            if (secretSequence.length > secretCode.length) {
+                secretSequence.shift();
+            }
+            
+            if (JSON.stringify(secretSequence) === JSON.stringify(secretCode)) {
+                activateSecretMode();
+                secretSequence = [];
+            }
+        }
+
+        function activateSecretMode() {
+            document.body.style.animation = 'rainbow 2s linear infinite';
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes rainbow {
+                    0% { filter: hue-rotate(0deg); }
+                    100% { filter: hue-rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            setTimeout(() => {
+                document.body.style.animation = '';
+                style.remove();
+            }, 4000);
+        }
+
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            
+            loginForm.addEventListener('submit', handleFormSubmit);
+            addInputEffects();
+            
+            // Adiciona event listener para sugestão de senha
+            passwordSuggestion.addEventListener('click', applySuggestedPassword);
+            
+            // Easter egg
+            document.addEventListener('keydown', handleSecretSequence);
+            
+            // Auto-focus no primeiro input após animação
+            setTimeout(() => {
+                emailInput.focus();
+            }, 1500);
+            
+            // Gera senha inicial
+            const initialPassword = generateRandomPassword();
+            suggestedPassword.textContent = initialPassword;
+        });
+
+        // ===== PREVENÇÃO DE SPAM =====
+        let submitCount = 0;
+        const originalSubmitHandler = handleFormSubmit;
+
+        function handleFormSubmit(e) {
+            submitCount++;
+            
+            if (submitCount > 3) {
+                e.preventDefault();
+                alert('Muitas tentativas. Aguarde alguns segundos antes de tentar novamente.');
+                return;
+            }
+            
+            originalSubmitHandler(e);
+        }
+
+        setInterval(() => {
+            submitCount = 0;
+        }, 60000);
+    </script>
+</body>
+</html>

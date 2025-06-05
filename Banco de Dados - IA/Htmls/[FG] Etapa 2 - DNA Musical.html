@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mixer de DNA Musical - Voxy Mix</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(255, 0, 150, 0.02) 0%, transparent 60%),
+                radial-gradient(circle at 80% 70%, rgba(0, 200, 255, 0.02) 0%, transparent 60%),
+                linear-gradient(180deg, #0a0a0a 0%, #111111 25%, #0f0f0f 75%, #0a0a0a 100%);
+            color: #e8e8e8; min-height: 100vh; overflow-x: hidden;
+            display: flex; align-items: center; justify-content: center; padding: 1rem;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0);
+            background-size: 20px 20px; pointer-events: none; opacity: 0.3; z-index: -1;
+        }
+        
+        /* ===== CONTAINER PRINCIPAL ===== */
+        .main-container { 
+            max-width: 800px; 
+            width: 100%; 
+            position: relative; 
+            z-index: 1;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        /* ===== HEADER ===== */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #00a2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            font-size: 1rem;
+            color: #888;
+            font-style: italic;
+        }
+        
+        /* ===== MIXER CONTAINER ===== */
+        .mixer-container {
+            background: linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 50%, #1a1a1a 100%);
+            border: 1px solid rgba(100, 100, 100, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        /* ===== PONTOS TOTAIS ===== */
+        .points-display {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .points-text {
+            font-size: 0.9rem;
+            color: #888;
+        }
+        .points-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00a2ff;
+        }
+        .points-value.warning {
+            color: #ff4444;
+        }
+        
+        /* ===== CAPSULA CENTRAL ===== */
+        .formula-container {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 2rem;
+            position: relative;
+        }
+        
+        .capsule {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 100px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                inset 0 2px 10px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            background: linear-gradient(180deg, 
+                rgba(0, 162, 255, 0.8) 0%, 
+                rgba(0, 162, 255, 0.4) 100%);
+            transition: all 0.5s ease;
+            animation: bubble 3s ease-in-out infinite;
+        }
+        
+        @keyframes bubble {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .bubbles {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .bubble {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: rise 2s ease-in-out infinite;
+        }
+        
+        @keyframes rise {
+            0% { transform: translateY(0); opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+        
+        .formula-result {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .formula-result.show {
+            opacity: 1;
+        }
+        
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(0, 162, 255, 0.8);
+        }
+        
+        /* ===== KNOBS GRID ===== */
+        .knobs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* ===== KNOB INDIVIDUAL ===== */
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .knob-wrapper {
+            position: relative;
+        }
+        
+        .knob {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            position: relative;
+            cursor: grab;
+            background: 
+                radial-gradient(circle at 30% 30%, #3a3a3a, #1a1a1a),
+                radial-gradient(circle at 70% 70%, #2a2a2a, #0a0a0a);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                inset 0 2px 4px rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .knob:hover {
+            transform: scale(1.05);
+        }
+        
+        .knob.dragging {
+            cursor: grabbing;
+            transform: scale(1.08);
+        }
+        
+        .knob-indicator {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            width: 4px;
+            height: 35px;
+            background: linear-gradient(180deg, #00a2ff, #ffffff);
+            border-radius: 2px;
+            transform-origin: center 42px;
+            transform: translateX(-50%) rotate(0deg);
+            box-shadow: 0 0 8px rgba(0, 162, 255, 0.8);
+            transition: none;
+        }
+        
+        .knob-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00a2ff;
+            text-shadow: 0 0 8px rgba(0, 162, 255, 0.6);
+        }
+        
+        .knob-info {
+            text-align: center;
+        }
+        
+        .knob-label {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.2rem;
+        }
+        
+        .knob-desc {
+            font-size: 0.8rem;
+            color: #888;
+            font-style: italic;
+        }
+        
+        /* ===== COLORS FOR EACH KNOB ===== */
+        .knob-container[data-type="fama"] .knob-indicator {
+            background: linear-gradient(180deg, #ff0080, #ff80c0);
+        }
+        .knob-container[data-type="dinheiro"] .knob-indicator {
+            background: linear-gradient(180deg, #ffd700, #ffed80);
+        }
+        .knob-container[data-type="precisao"] .knob-indicator {
+            background: linear-gradient(180deg, #00ff88, #80ffcc);
+        }
+        .knob-container[data-type="velocidade"] .knob-indicator {
+            background: linear-gradient(180deg, #ff4500, #ff8c00);
+        }
+        
+        /* ===== RESULTADO DESCRIPTION ===== */
+        .result-description {
+            text-align: center;
+            margin-top: 1rem;
+            min-height: 3rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .result-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #00a2ff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-subtitle {
+            font-size: 1rem;
+            color: #ccc;
+            font-style: italic;
+        }
+        
+        /* ===== CONTINUE BUTTON ===== */
+        .continue-section {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .continue-btn {
+            padding: 1rem 3rem;
+            background: linear-gradient(135deg, #00a2ff, #0084ff);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 162, 255, 0.4);
+        }
+        
+        .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 162, 255, 0.6);
+        }
+        
+        .continue-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ===== MOBILE ===== */
+        @media (max-width: 768px) {
+            .mixer-container { padding: 1.5rem; }
+            .knobs-grid { gap: 1.5rem; }
+            .knob { width: 80px; height: 80px; }
+            .knob-indicator { height: 28px; transform-origin: center 34px; }
+            .formula-container { width: 150px; height: 150px; }
+            .points-display { position: static; margin-bottom: 1rem; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1 class="title">Mixer de DNA Musical</h1>
+            <p class="subtitle">Monte sua fórmula de sucesso</p>
+        </div>
+        
+        <div class="mixer-container">
+            <div class="points-display">
+                <span class="points-text">Pontos: </span>
+                <span class="points-value" id="pointsValue">0/300</span>
+            </div>
+            
+            <div class="formula-container">
+                <div class="capsule">
+                    <div class="liquid" id="liquid">
+                        <div class="bubbles">
+                            <div class="bubble" style="animation-delay: 0s; left: -10px;"></div>
+                            <div class="bubble" style="animation-delay: 0.5s; left: 0px;"></div>
+                            <div class="bubble" style="animation-delay: 1s; left: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="formula-result" id="formulaResult">
+                        <div class="result-icon">🧪</div>
+                        <div class="result-name">Analisando...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="knobs-grid">
+                <div class="knob-container" data-type="fama">
+                    <div class="knob-wrapper">
+                        <div class="knob" data-knob="fama">
+                            <div class="knob-indicator"></div>
+                            <div class="knob-value">0</div>
+                        </div>
+                    </div>
+                    <div class="knob-info">
+                        <div class="knob-label">FAMA</div>
+                        <div class="knob-desc">Lançar Hits e Fazer Parcerias</div>
+                    </div>
+                </div>
+                
+                <div class="knob-container" data-type="dinheiro">
+                    <div class="knob-wrapper">
+                        <div class="knob" data-knob="dinheiro">
+                            <div class="knob-indicator"></div>
+                            <div class="knob-value">0</div>
+                        </div>
+                    </div>
+                    <div class="knob-info">
+                        <div class="knob-label">DINHEIRO</div>
+                        <div class="knob-desc">Transformar música em grana</div>
+                    </div>
+                </div>
+                
+                <div class="knob-container" data-type="precisao">
+                    <div class="knob-wrapper">
+                        <div class="knob" data-knob="precisao">
+                            <div class="knob-indicator"></div>
+                            <div class="knob-value">0</div>
+                        </div>
+                    </div>
+                    <div class="knob-info">
+                        <div class="knob-label">PRECISÃO</div>
+                        <div class="knob-desc">Qualidade GRINGA em todas as músicas</div>
+                    </div>
+                </div>
+                
+                <div class="knob-container" data-type="velocidade">
+                    <div class="knob-wrapper">
+                        <div class="knob" data-knob="velocidade">
+                            <div class="knob-indicator"></div>
+                            <div class="knob-value">0</div>
+                        </div>
+                    </div>
+                    <div class="knob-info">
+                        <div class="knob-label">VELOCIDADE</div>
+                        <div class="knob-desc">Terminar músicas RÁPIDO</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-description" id="resultDescription">
+                <div class="result-title">Gire os knobs para criar sua fórmula</div>
+                <div class="result-subtitle">Distribua 300 pontos entre suas prioridades</div>
+            </div>
+            
+            <div class="continue-section">
+                <button class="continue-btn" id="continueBtn" disabled>
+                    Continuar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Sistema de Knobs
+        const knobData = {
+            fama: { value: 0, element: null, indicator: null, valueDisplay: null },
+            dinheiro: { value: 0, element: null, indicator: null, valueDisplay: null },
+            precisao: { value: 0, element: null, indicator: null, valueDisplay: null },
+            velocidade: { value: 0, element: null, indicator: null, valueDisplay: null }
+        };
+        
+        const MAX_POINTS = 300;
+        const MAX_PER_KNOB = 100;
+        let isDragging = false;
+        let currentKnob = null;
+        let startAngle = 0;
+        let startValue = 0;
+        
+        // Inicialização
+        function init() {
+            // Configurar knobs
+            Object.keys(knobData).forEach(key => {
+                const knob = document.querySelector(`[data-knob="${key}"]`);
+                knobData[key].element = knob;
+                knobData[key].indicator = knob.querySelector('.knob-indicator');
+                knobData[key].valueDisplay = knob.querySelector('.knob-value');
+                
+                // Event listeners
+                knob.addEventListener('mousedown', (e) => startDrag(e, key));
+                knob.addEventListener('touchstart', (e) => startDrag(e, key), { passive: false });
+            });
+            
+            // Global event listeners
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('touchend', stopDrag);
+            
+            // Continue button
+            document.getElementById('continueBtn').addEventListener('click', handleContinue);
+            
+            updateDisplay();
+        }
+        
+        function startDrag(e, knobType) {
+            e.preventDefault();
+            isDragging = true;
+            currentKnob = knobType;
+            knobData[knobType].element.classList.add('dragging');
+            
+            const rect = knobData[knobType].element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            
+            startAngle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+            startValue = knobData[knobType].value;
+        }
+        
+        function drag(e) {
+            if (!isDragging || !currentKnob) return;
+            e.preventDefault();
+            
+            const rect = knobData[currentKnob].element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            
+            const currentAngle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+            let angleDiff = currentAngle - startAngle;
+            
+            if (angleDiff > 180) angleDiff -= 360;
+            if (angleDiff < -180) angleDiff += 360;
+            
+            const valueDiff = (angleDiff / 270) * 100; // 270 degrees = 0 to 100
+            let newValue = Math.round(startValue + valueDiff);
+            newValue = Math.max(0, Math.min(MAX_PER_KNOB, newValue));
+            
+            // Verificar se não ultrapassa o total
+            const otherPoints = getTotalPoints() - knobData[currentKnob].value;
+            if (otherPoints + newValue > MAX_POINTS) {
+                newValue = MAX_POINTS - otherPoints;
+            }
+            
+            knobData[currentKnob].value = newValue;
+            updateDisplay();
+        }
+        
+        function stopDrag() {
+            if (isDragging && currentKnob) {
+                knobData[currentKnob].element.classList.remove('dragging');
+            }
+            isDragging = false;
+            currentKnob = null;
+        }
+        
+        function getTotalPoints() {
+            return Object.values(knobData).reduce((sum, knob) => sum + knob.value, 0);
+        }
+        
+        function updateDisplay() {
+            const total = getTotalPoints();
+            
+            // Atualizar valores e rotações dos knobs
+            Object.keys(knobData).forEach(key => {
+                const data = knobData[key];
+                const rotation = (data.value / MAX_PER_KNOB) * 270; // 270 degrees max
+                data.indicator.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
+                data.valueDisplay.textContent = data.value;
+            });
+            
+            // Atualizar contador de pontos
+            const pointsDisplay = document.getElementById('pointsValue');
+            pointsDisplay.textContent = `${total}/300`;
+            pointsDisplay.classList.toggle('warning', total > MAX_POINTS);
+            
+            // Atualizar líquido e cor
+            updateLiquid();
+            
+            // Atualizar resultado
+            updateResult();
+            
+            // Habilitar/desabilitar botão continuar
+            const continueBtn = document.getElementById('continueBtn');
+            const activeKnobs = Object.values(knobData).filter(k => k.value > 0).length;
+            continueBtn.disabled = total === 0 || total > MAX_POINTS || activeKnobs < 2;
+        }
+        
+        function updateLiquid() {
+            const liquid = document.getElementById('liquid');
+            const total = getTotalPoints();
+            const percentage = (total / MAX_POINTS) * 70 + 30; // 30% to 100%
+            
+            liquid.style.height = `${percentage}%`;
+            
+            // Calcular cor baseada nas combinações
+            const { fama, dinheiro, precisao, velocidade } = knobData;
+            
+            let r = 0, g = 100, b = 255; // Base azul
+            
+            // Adicionar influência de cada knob
+            r += (fama.value / MAX_PER_KNOB) * 150; // Rosa
+            r += (dinheiro.value / MAX_PER_KNOB) * 200; // Dourado
+            g += (dinheiro.value / MAX_PER_KNOB) * 150; // Dourado
+            g += (precisao.value / MAX_PER_KNOB) * 200; // Verde
+            r += (velocidade.value / MAX_PER_KNOB) * 200; // Laranja
+            
+            r = Math.min(255, r);
+            g = Math.min(255, g);
+            b = Math.max(50, b - (r + g) / 4);
+            
+            liquid.style.background = `linear-gradient(180deg, 
+                rgba(${r}, ${g}, ${b}, 0.8) 0%, 
+                rgba(${r}, ${g}, ${b}, 0.4) 100%)`;
+        }
+        
+        function updateResult() {
+            const { fama, dinheiro, precisao, velocidade } = knobData;
+            const total = getTotalPoints();
+            
+            if (total === 0) {
+                setResult('🧪', 'Analisando...', 'Gire os knobs para criar sua fórmula', 'Distribua 300 pontos entre suas prioridades');
+                return;
+            }
+            
+            // Determinar perfil baseado nas combinações
+            let profile = determineProfile(fama.value, dinheiro.value, precisao.value, velocidade.value);
+            
+            document.getElementById('formulaResult').classList.add('show');
+            setResult(profile.icon, profile.name, profile.title, profile.subtitle);
+        }
+        
+        function determineProfile(f, d, p, v) {
+            // Perfis extremos (1 dominante)
+            if (f >= 200) return { icon: '🎭', name: 'Holofote', title: 'Holofote Viciado', subtitle: 'Quer ser visto, nem que ganhe pouco' };
+            if (d >= 200) return { icon: '💰', name: 'Cofre', title: 'Cofre Ambulante', subtitle: 'Música é negócio, fama é distração' };
+            if (p >= 200) return { icon: '🎯', name: 'Perfeccionista', title: 'Perfeccionista Doente', subtitle: 'Prefere não lançar do que lançar imperfeito' };
+            if (v >= 200) return { icon: '⚡', name: 'Rajada', title: 'Rajada Sonora', subtitle: 'Quantidade é minha qualidade' };
+            
+            // Duplas poderosas
+            if (f >= 100 && d >= 100) return { icon: '👑', name: 'Popstar', title: 'Popstar Empresário', subtitle: 'Famoso E rico, o combo dos sonhos' };
+            if (p >= 100 && v >= 100) return { icon: '🔧', name: 'Cirurgião', title: 'Cirurgião Veloz', subtitle: 'Perfeito E rápido? Esse é RARO' };
+            if (f >= 100 && p >= 100) return { icon: '🏆', name: 'Referência', title: 'Referência Viva', subtitle: 'Quando lança, vira padrão do mercado' };
+            if (d >= 100 && v >= 100) return { icon: '🏧', name: 'Caixa', title: 'Caixa Registradora', subtitle: 'Ching ching a cada projeto finalizado' };
+            
+            // Perfis ghost (baixa fama)
+            if (f <= 20 && d >= 80 && p >= 80) return { icon: '👻', name: 'Ghost', title: 'Ghost Premium', subtitle: 'Fatura PESADO nos bastidores' };
+            if (f <= 20 && d >= 80 && v >= 80) return { icon: '💸', name: 'Fantasma', title: 'Fantasma Rico', subtitle: 'Ninguém sabe, mas tá milionário' };
+            
+            // Triplas
+            if (f >= 60 && d >= 60 && p >= 60) return { icon: '💎', name: 'Elite', title: 'Elite Musical', subtitle: 'Topo em tudo que importa' };
+            if (d >= 60 && p >= 60 && v >= 60) return { icon: '🏭', name: 'Máquina', title: 'Máquina de Lucro', subtitle: 'Eficiência que gera milhões' };
+            
+            // Equilibrado
+            if (Math.abs(f - d) <= 20 && Math.abs(p - v) <= 20) return { icon: '🎲', name: 'Coringa', title: 'Coringa do Game', subtitle: 'Faz tudo bem feito, sem ponto fraco' };
+            
+            // Default
+            return { icon: '🎵', name: 'Híbrido', title: 'Perfil Híbrido', subtitle: 'Mistura única de habilidades' };
+        }
+        
+        function setResult(icon, name, title, subtitle) {
+            document.querySelector('.result-icon').textContent = icon;
+            document.querySelector('.result-name').textContent = name;
+            document.querySelector('.result-title').textContent = title;
+            document.querySelector('.result-subtitle').textContent = subtitle;
+        }
+        
+        function handleContinue() {
+            const profile = {
+                fama: knobData.fama.value,
+                dinheiro: knobData.dinheiro.value,
+                precisao: knobData.precisao.value,
+                velocidade: knobData.velocidade.value,
+                total: getTotalPoints()
+            };
+            
+            // Salvar perfil (localStorage, enviar para servidor, etc.)
+            console.log('Perfil criado:', profile);
+            
+            // Avançar para próxima etapa
+            alert('Perfil criado com sucesso! Avançando para próxima etapa...');
+        }
+        
+        // Inicializar quando o DOM carregar
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Exclusivo - Voxy Mix</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            user-select: none; 
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(255, 0, 150, 0.02) 0%, transparent 60%),
+                radial-gradient(circle at 80% 70%, rgba(0, 200, 255, 0.02) 0%, transparent 60%),
+                linear-gradient(180deg, #0a0a0a 0%, #111111 25%, #0f0f0f 75%, #0a0a0a 100%);
+            color: #e8e8e8; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            padding: 0;
+        }
+
+        body::before {
+            content: ''; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0);
+            background-size: 20px 20px; 
+            pointer-events: none; 
+            opacity: 0.3; 
+            z-index: -1;
+        }
+
+        /* ===== CONTAINER PRINCIPAL ===== */
+        .main-container { 
+            max-width: 1200px; 
+            width: 100%; 
+            margin: 0 auto;
+            position: relative; 
+            z-index: 1;
+            opacity: 0;
+            padding: 2rem 1rem;
+            transition: opacity 0.5s ease;
+        }
+
+        .main-container.show {
+            opacity: 1;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero-section {
+            text-align: center;
+            padding: 2rem 0 3rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero-headline {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #00ff88, #00a2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .hero-subheadline {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.4;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Desktop: 2 linhas */
+        .hero-subheadline .line1 {
+            display: block;
+        }
+
+        .hero-subheadline .line2 {
+            display: block;
+            margin-top: 0.3rem;
+        }
+
+        .hero-logo {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .hero-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(0, 162, 255, 0.5));
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* ===== SEÇÕES PRINCIPAIS ===== */
+        .section {
+            margin: 4rem 0;
+            padding: 0 1rem;
+            animation: fadeInUp 0.8s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .section:nth-child(2) { animation-delay: 0.1s; }
+        .section:nth-child(3) { animation-delay: 0.2s; }
+        .section:nth-child(4) { animation-delay: 0.3s; }
+
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #ffffff;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #00ff88;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        /* ===== O QUE É O VOXY MIX ===== */
+        .what-is-container {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .voxy-components {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .component-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 162, 255, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .component-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 255, 136, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .component-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .component-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00a2ff;
+            margin-bottom: 1rem;
+        }
+
+        .component-text {
+            font-size: 1rem;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        /* ===== COMPATIBILIDADE ===== */
+        .compatibility-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .compatibility-block {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .compatibility-block:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 162, 255, 0.3);
+        }
+
+        .compatibility-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .compatibility-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .compatibility-text {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        /* ===== POR QUE FUNCIONA (TOGGLE) ===== */
+        .why-works-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .toggle-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #888;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 0;
+        }
+
+        .toggle-button:first-child {
+            border-radius: 10px 0 0 10px;
+        }
+
+        .toggle-button:last-child {
+            border-radius: 0 10px 10px 0;
+        }
+
+        .toggle-button.active {
+            background: linear-gradient(135deg, #00ff88, #00a2ff);
+            color: #000;
+            font-weight: bold;
+        }
+
+        .comparison-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .comparison-card {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border-radius: 15px;
+            padding: 2rem;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .comparison-card.show {
+            opacity: 1;
+        }
+
+        .comparison-card.common {
+            border: 2px solid #ff4444;
+        }
+
+        .comparison-card.dynamic {
+            border: 2px solid #00ff88;
+        }
+
+        /* ===== CATEGORIAS DE PRESETS ===== */
+        .presets-carousel {
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+        }
+
+        .presets-track {
+            display: flex;
+            transition: transform 0.5s ease;
+            gap: 1rem;
+        }
+
+        .preset-card {
+            min-width: 280px;
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border: 1px solid rgba(0, 162, 255, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .preset-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .preset-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00a2ff;
+            margin-bottom: 1rem;
+        }
+
+        .preset-description {
+            font-size: 1rem;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .carousel-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .nav-button {
+            background: rgba(0, 162, 255, 0.2);
+            border: 1px solid rgba(0, 162, 255, 0.5);
+            color: #00a2ff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background: rgba(0, 162, 255, 0.5);
+            color: #000;
+        }
+
+        /* ===== BÔNUS ===== */
+        .bonus-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .bonus-card {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border: 2px solid transparent;
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bonus-card:nth-child(1) { border-color: rgba(255, 215, 0, 0.3); }
+        .bonus-card:nth-child(2) { border-color: rgba(0, 255, 136, 0.3); }
+        .bonus-card:nth-child(3) { border-color: rgba(0, 162, 255, 0.3); }
+        .bonus-card:nth-child(4) { border-color: rgba(255, 0, 150, 0.3); }
+        .bonus-card:nth-child(5) { border-color: rgba(255, 100, 0, 0.3); }
+
+        .bonus-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff88, #00a2ff, #ff0080, #ffd700);
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .bonus-card:hover::before {
+            opacity: 1;
+        }
+
+        .bonus-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .bonus-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .bonus-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .bonus-description {
+            font-size: 1rem;
+            color: #bbb;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .bonus-value {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .value-old {
+            font-size: 1rem;
+            color: #888;
+            text-decoration: line-through;
+        }
+
+        .value-new {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .bonus-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .bonus-card.expanded .bonus-details {
+            max-height: 200px;
+        }
+
+        /* ===== OFERTA ===== */
+        .offer-section {
+            background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 30px;
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .offer-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 70%);
+            animation: rotateGlow 10s linear infinite;
+        }
+
+        @keyframes rotateGlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .offer-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .offer-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff0080, #ff4080);
+            color: #fff;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .offer-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 2rem;
+        }
+
+        .offer-items {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            text-align: left;
+        }
+
+        .offer-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: #ddd;
+        }
+
+        .offer-item::before {
+            content: '✓';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid #00ff88;
+            border-radius: 50%;
+            color: #00ff88;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .price-container {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .price-original {
+            font-size: 1.2rem;
+            color: #888;
+            text-decoration: line-through;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-current {
+            font-size: 3.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00ff88, #00a2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+            margin-bottom: 0.5rem;
+        }
+
+        .price-installments {
+            font-size: 1.1rem;
+            color: #ccc;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1.5rem 4rem;
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #000;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 10px 30px rgba(0, 255, 136, 0.4),
+                inset 0 2px 4px rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            margin-top: 2rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 
+                0 15px 40px rgba(0, 255, 136, 0.6),
+                inset 0 2px 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        /* ===== GARANTIA ===== */
+        .guarantee-section {
+            background: linear-gradient(145deg, rgba(255, 215, 0, 0.05), rgba(255, 140, 0, 0.05));
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .guarantee-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 2rem;
+        }
+
+        .guarantee-seal {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .guarantee-seal img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+        }
+
+        .guarantee-text {
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #ddd;
+        }
+
+        /* ===== CONTEÚDO E ENTREGA ===== */
+        .delivery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .delivery-card {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border: 1px solid rgba(0, 162, 255, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .delivery-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #00a2ff;
+        }
+
+        .delivery-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .delivery-text {
+            font-size: 1rem;
+            color: #bbb;
+            line-height: 1.5;
+        }
+
+        /* ===== FAQ ===== */
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            border-color: rgba(0, 162, 255, 0.3);
+            box-shadow: 0 5px 20px rgba(0, 162, 255, 0.2);
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            color: #00a2ff;
+        }
+
+        .faq-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+            padding: 0 1.5rem;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        .faq-answer p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #bbb;
+            margin-bottom: 1rem;
+        }
+
+        .faq-answer strong {
+            color: #00ff88;
+        }
+
+        /* ===== PORTAL CHECKOUT ===== */
+        .portal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 0, 0, 0.95), #000000);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .portal-overlay.show {
+            display: flex;
+        }
+
+        .portal-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .portal-outer {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #00a2ff,
+                #0066ff,
+                #00a2ff,
+                #00ffff,
+                #00a2ff
+            );
+            animation: portalSpin 2s linear infinite;
+            filter: blur(2px);
+        }
+
+        .portal-middle {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle at center,
+                transparent 40%,
+                rgba(0, 162, 255, 0.3) 60%,
+                rgba(0, 162, 255, 0.8) 100%
+            );
+            animation: portalPulse 1.5s ease-in-out infinite;
+        }
+
+        .portal-inner {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle at center,
+                #001133 0%,
+                #002266 50%,
+                transparent 100%
+            );
+            box-shadow: 
+                inset 0 0 50px rgba(0, 162, 255, 0.8),
+                inset 0 0 100px rgba(0, 100, 255, 0.5);
+            animation: portalGlow 2s ease-in-out infinite;
+        }
+
+        .portal-lock {
+            position: relative;
+            z-index: 10;
+            font-size: 5rem;
+            color: #00a2ff;
+            text-shadow: 
+                0 0 20px rgba(0, 162, 255, 1),
+                0 0 40px rgba(0, 162, 255, 0.8),
+                0 0 60px rgba(0, 162, 255, 0.6);
+            animation: lockBreak 2s ease-out forwards;
+        }
+
+        .portal-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00a2ff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 162, 255, 0.8);
+            animation: particleFloat 3s linear infinite;
+        }
+
+        @keyframes portalSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes portalPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        @keyframes portalGlow {
+            0%, 100% { 
+                box-shadow: 
+                    inset 0 0 50px rgba(0, 162, 255, 0.8),
+                    inset 0 0 100px rgba(0, 100, 255, 0.5);
+            }
+            50% { 
+                box-shadow: 
+                    inset 0 0 80px rgba(0, 162, 255, 1),
+                    inset 0 0 150px rgba(0, 100, 255, 0.8);
+            }
+        }
+
+        @keyframes lockBreak {
+            0% { 
+                transform: scale(1) rotate(0deg); 
+                opacity: 1; 
+            }
+            25% { 
+                transform: scale(1.2) rotate(180deg); 
+            }
+            50% { 
+                transform: scale(1.5) rotate(360deg); 
+            }
+            75% { 
+                transform: scale(0.8) rotate(540deg); 
+                opacity: 0.5; 
+            }
+            100% { 
+                transform: scale(0) rotate(720deg); 
+                opacity: 0; 
+            }
+        }
+
+        @keyframes particleFloat {
+            from {
+                transform: translate(0, 100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            to {
+                transform: translate(100px, -100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ===== ANIMAÇÕES GERAIS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+        }
+
+        /* ===== MOBILE RESPONSIVO ===== */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem 0.5rem;
+            }
+
+            .hero-headline { 
+                font-size: 2.5rem; 
+                line-height: 1.1;
+                margin-bottom: 1rem;
+            }
+
+            .hero-subheadline {
+                font-size: 1.1rem;
+                line-height: 1.3;
+                margin-bottom: 2rem;
+                padding: 0 0.5rem;
+            }
+
+            /* Mobile: 3 linhas */
+            .hero-subheadline .line1 {
+                display: block;
+            }
+
+            .hero-subheadline .line2 {
+                display: block;
+                margin-top: 0.3rem;
+            }
+
+            .hero-subheadline .line3 {
+                display: block;
+                margin-top: 0.3rem;
+            }
+            
+            .hero-logo {
+                width: 150px;
+                height: 150px;
+                margin-bottom: 1.5rem;
+            }
+
+            .section-title { 
+                font-size: 1.8rem; 
+            }
+
+            .cta-button { 
+                padding: 1.2rem 2.5rem; 
+                font-size: 1.2rem; 
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .price-current { 
+                font-size: 2.8rem; 
+            }
+
+            .portal-container { 
+                transform: scale(0.8); 
+            }
+
+            .voxy-components {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .compatibility-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comparison-content {
+                grid-template-columns: 1fr;
+            }
+
+            .preset-card {
+                min-width: 250px;
+            }
+
+            .bonus-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .delivery-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .offer-items {
+                text-align: center;
+            }
+
+            .faq-question {
+                font-size: 1rem;
+            }
+
+            .component-card {
+                padding: 1.5rem;
+            }
+
+            .what-is-container {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-headline { 
+                font-size: 2rem; 
+                letter-spacing: 1px;
+            }
+
+            .hero-subheadline {
+                font-size: 1rem;
+            }
+
+            .section-title { 
+                font-size: 1.5rem; 
+            }
+
+            .hero-logo {
+                width: 120px;
+                height: 120px;
+            }
+
+            .cta-button { 
+                padding: 1rem 2rem; 
+                font-size: 1.1rem; 
+            }
+
+            .preset-card {
+                min-width: 220px;
+            }
+
+            .portal-container { 
+                transform: scale(0.6); 
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- CONTAINER PRINCIPAL -->
+    <div class="main-container" id="mainContainer">
+        <!-- HERO SECTION -->
+        <section class="hero-section">
+            <h1 class="hero-headline" id="heroHeadline">
+                ACESSO VIP DESBLOQUEADO
+            </h1>
+
+            <div class="hero-subheadline" id="heroSubheadline">
+                <span class="line1">Você é UM DOS POUCOS com a chance de dominar A NOVA ERA DA MIXAGEM</span>
+                <span class="line2">(antes de todo mundo...)</span>
+                <span class="line3" style="display: none;">(antes de todo mundo...)</span>
+            </div>
+
+            <div class="hero-logo">
+                <img src="http://beatmakerlucrativo.com/wp-content/uploads/2025/05/DEF-Logo-Voxy-Mix-Trasparente-3D.png" alt="Voxy Mix Logo">
+            </div>
+        </section>
+
+        <!-- 2. O QUE É O VOXY MIX -->
+        <section class="section">
+            <h2 class="section-title">O Que É o Voxy Mix?</h2>
+            <p class="section-subtitle">A junção perfeita de duas tecnologias revolucionárias</p>
+            
+            <div class="what-is-container">
+                <div class="voxy-components">
+                    <div class="component-card">
+                        <div class="component-icon">🎛️</div>
+                        <h3 class="component-title">Presets Dinâmicos</h3>
+                        <p class="component-text">
+                            Não são presets comuns. São presets TESTADOS, aprovados em compatibilidade 
+                            e DINAMIZADOS com controles práticos que se adaptam a qualquer voz.
+                        </p>
+                    </div>
+                    
+                    <div class="component-card">
+                        <div class="component-icon">⚙️</div>
+                        <h3 class="component-title">Ferramenta StudioVerse</h3>
+                        <p class="component-text">
+                            A tecnologia que torna possível a criação e uso desses novos tipos de presets. 
+                            É ela que faz a "mágica" funcionar.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. COMPATIBILIDADE UNIVERSAL -->
+        <section class="section">
+            <h2 class="section-title">Compatibilidade Universal</h2>
+            <p class="section-subtitle">Funciona onde você já trabalha</p>
+            
+            <div class="compatibility-grid">
+                <div class="compatibility-block">
+                    <span class="compatibility-icon">🖥️</span>
+                    <h3 class="compatibility-title">Windows</h3>
+                    <p class="compatibility-text">Todas as versões recentes</p>
+                </div>
+                
+                <div class="compatibility-block">
+                    <span class="compatibility-icon">🍎</span>
+                    <h3 class="compatibility-title">Mac</h3>
+                    <p class="compatibility-text">Versão 10 até 15 (M1 incluso)</p>
+                </div>
+                
+                <div class="compatibility-block">
+                    <span class="compatibility-icon">🎵</span>
+                    <h3 class="compatibility-title">Todas as DAWs</h3>
+                    <p class="compatibility-text">FL Studio, Logic, Ableton, etc.</p>
+                </div>
+                
+                <div class="compatibility-block">
+                    <span class="compatibility-icon">🎤</span>
+                    <h3 class="compatibility-title">Qualquer Voz</h3>
+                    <p class="compatibility-text">Masculina, feminina, grave, aguda</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. POR QUE FUNCIONA -->
+        <section class="section">
+            <h2 class="section-title">Por Que Funciona Tão Bem?</h2>
+            
+            <div class="why-works-container">
+                <div class="comparison-toggle">
+                    <button class="toggle-button active" data-type="common">Preset Comum</button>
+                    <button class="toggle-button" data-type="dynamic">Preset Dinâmico</button>
+                </div>
+                
+                <div class="comparison-content">
+                    <div class="comparison-card common show">
+                        <h3 style="color: #ff4444; margin-bottom: 1rem;">❌ Preset Comum (Estático)</h3>
+                        <ul style="text-align: left; color: #ccc; line-height: 1.8;">
+                            <li>Configuração fixa para "voz genérica"</li>
+                            <li>Não se adapta ao seu timbre</li>
+                            <li>Resultado artificial e forçado</li>
+                            <li>Funciona bem só em 20% dos casos</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="comparison-card dynamic">
+                        <h3 style="color: #00ff88; margin-bottom: 1rem;">✅ Preset Dinâmico (Adaptativo)</h3>
+                        <ul style="text-align: left; color: #ccc; line-height: 1.8;">
+                            <li>Knobs inteligentes que se ajustam</li>
+                            <li>Testado em 1.168 vozes diferentes</li>
+                            <li>Resultado natural e profissional</li>
+                            <li>95% de taxa de sucesso comprovada</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. CATEGORIAS DE PRESETS -->
+        <section class="section">
+            <h2 class="section-title">6 Categorias de Presets Inclusos</h2>
+            <p class="section-subtitle">Para todas as suas necessidades de mixagem</p>
+            
+            <div class="presets-carousel">
+                <div class="presets-track" id="presetsTrack">
+                    <div class="preset-card">
+                        <div class="preset-icon">🎯</div>
+                        <h3 class="preset-title">Presets Completos</h3>
+                        <p class="preset-description">Tudo em um só preset. Carregue e sua voz já fica profissional instantaneamente.</p>
+                    </div>
+                    
+                    <div class="preset-card">
+                        <div class="preset-icon">🧹</div>
+                        <h3 class="preset-title">Limpeza Vocal</h3>
+                        <p class="preset-description">Remove ruídos, ecos e imperfeições mantendo a naturalidade da voz.</p>
+                    </div>
+                    
+                    <div class="preset-card">
+                        <div class="preset-icon">🎤</div>
+                        <h3 class="preset-title">Voz Principal</h3>
+                        <p class="preset-description">Mixagem completa para vocal principal. Presença, clareza e impacto.</p>
+                    </div>
+                    
+                    <div class="preset-card">
+                        <div class="preset-icon">🗣️</div>
+                        <h3 class="preset-title">Adlibs</h3>
+                        <p class="preset-description">Tratamento específico para adlibs que se encaixam perfeitamente na mix.</p>
+                    </div>
+                    
+                    <div class="preset-card">
+                        <div class="preset-icon">✨</div>
+                        <h3 class="preset-title">Efeitos Especiais</h3>
+                        <p class="preset-description">Reverbs, delays e modulações para criar atmosferas únicas.</p>
+                    </div>
+                    
+                    <div class="preset-card">
+                        <div class="preset-icon">🔄</div>
+                        <h3 class="preset-title">Canais de Retorno</h3>
+                        <p class="preset-description">Presets para sends e returns, criando espacialização profissional.</p>
+                    </div>
+                </div>
+                
+                <div class="carousel-nav">
+                    <button class="nav-button" onclick="moveCarousel(-1)">← Anterior</button>
+                    <button class="nav-button" onclick="moveCarousel(1)">Próximo →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. BÔNUS CONCRETOS -->
+        <section class="section">
+            <h2 class="section-title">🎁 Bônus Exclusivos Inclusos</h2>
+            <p class="section-subtitle">Valor adicional apenas para quem garante hoje</p>
+            
+            <div class="bonus-grid">
+                <div class="bonus-card" onclick="toggleBonus(this)">
+                    <div class="bonus-icon">🎛️</div>
+                    <h3 class="bonus-title">200 Plugins WAVES</h3>
+                    <p class="bonus-description">
+                        Os mesmos plugins usados por artistas internacionais. 
+                        Os MELHORES plugins do mercado.
+                    </p>
+                    <div class="bonus-value">
+                        <span class="value-old">De: R$497,00</span>
+                        <span class="value-new">INCLUSO</span>
+                    </div>
+                    <div class="bonus-details">
+                        <p>Compressores, EQs, Reverbs, Delays e muito mais. Tudo o que você precisa para produção profissional.</p>
+                    </div>
+                </div>
+                
+                <div class="bonus-card" onclick="toggleBonus(this)">
+                    <div class="bonus-icon">♾️</div>
+                    <h3 class="bonus-title">Atualizações Vitalícias</h3>
+                    <p class="bonus-description">
+                        Quando adicionarmos MAIS PRESETS, você recebe AUTOMATICAMENTE. 
+                        Sem pagar nada a mais.
+                    </p>
+                    <div class="bonus-value">
+                        <span class="value-new">VALOR INESTIMÁVEL</span>
+                    </div>
+                    <div class="bonus-details">
+                        <p>Seu investimento está protegido para sempre. Novos presets, novas categorias, novas funcionalidades.</p>
+                    </div>
+                </div>
+                
+                <div class="bonus-card" onclick="toggleBonus(this)">
+                    <div class="bonus-icon">🎥</div>
+                    <h3 class="bonus-title">Lives EXCLUSIVAS</h3>
+                    <p class="bonus-description">
+                        Aprenda as técnicas que usamos para CRIAR e MELHORAR 
+                        seus próprios presets dinâmicos.
+                    </p>
+                    <div class="bonus-value">
+                        <span class="value-old">De: R$197,00</span>
+                        <span class="value-new">INCLUSO</span>
+                    </div>
+                    <div class="bonus-details">
+                        <p>Sessões ao vivo com o criador do Voxy Mix. Tire dúvidas, veja demos exclusivas e aprenda técnicas avançadas.</p>
+                    </div>
+                </div>
+                
+                <div class="bonus-card" onclick="toggleBonus(this)">
+                    <div class="bonus-icon">🤝</div>
+                    <h3 class="bonus-title">Grupo de Networking</h3>
+                    <p class="bonus-description">
+                        Conecte-se com outros produtores e artistas. 
+                        Troque presets e colabore em projetos.
+                    </p>
+                    <div class="bonus-value">
+                        <span class="value-new">ACESSO EXCLUSIVO</span>
+                    </div>
+                    <div class="bonus-details">
+                        <p>Comunidade privada no Discord com produtores de vários níveis. Parcerias, feedbacks e oportunidades reais.</p>
+                    </div>
+                </div>
+                
+                <div class="bonus-card" onclick="toggleBonus(this)">
+                    <div class="bonus-icon">🔬</div>
+                    <h3 class="bonus-title">Curso: Criar Presets Dinâmicos</h3>
+                    <p class="bonus-description">
+                        Aprenda a metodologia completa para criar seus próprios 
+                        presets dinâmicos do zero.
+                    </p>
+                    <div class="bonus-value">
+                        <span class="value-old">Em breve...</span>
+                        <span class="value-new">INCLUSO</span>
+                    </div>
+                    <div class="bonus-details">
+                        <p>Curso completo que será lançado em 2024. Você recebe acesso antecipado e vitalício quando estiver pronto.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. OFERTA + CTA -->
+        <section class="section offer-section">
+            <div class="offer-content">
+                <div class="offer-badge">🔥 OFERTA POR TEMPO LIMITADO</div>
+                
+                <h2 class="offer-title">Garanta Seu Acesso Completo</h2>
+                
+                <div class="offer-items">
+                    <div class="offer-item">50+ PRESETS DINÂMICOS em 6 categorias</div>
+                    <div class="offer-item">200+ PLUGINS WAVES profissionais</div>
+                    <div class="offer-item">FERRAMENTA StudioVerse completa</div>
+                    <div class="offer-item">TUTORIAIS completos de instalação</div>
+                    <div class="offer-item">ATUALIZAÇÕES vitalícias</div>
+                    <div class="offer-item">GRUPO de networking exclusivo</div>
+                    <div class="offer-item">LIVES exclusivas com o criador</div>
+                    <div class="offer-item">CURSO de criação de presets (em breve)</div>
+                </div>
+                
+                <div class="price-container">
+                    <div class="price-original">De R$ 497,00</div>
+                    <div class="price-current">R$ 97,90</div>
+                    <div class="price-installments">ou 12x de R$ 9,83 no cartão</div>
+                </div>
+                
+                <a href="#" class="cta-button" id="ctaButton">
+                    QUERO MEU ACESSO AGORA
+                </a>
+            </div>
+        </section>
+
+        <!-- 8. GARANTIA -->
+        <section class="section guarantee-section">
+            <h2 class="guarantee-title">Garantia INCONDICIONAL</h2>
+            
+            <div class="guarantee-seal">
+                <img src="http://beatmakerlucrativo.com/wp-content/uploads/2025/05/md-o2zq4-garantia.webp" alt="Garantia 7 Dias">
+            </div>
+            
+            <div class="guarantee-text">
+                <p>
+                    O Voxy Mix tem uma garantia incondicional de 7 dias.
+                    A ferramenta está hospedada na Cakto, uma das plataformas mais fácil de pedir reembolso...
+                </p>
+                <p>
+                    Se eu quisesse esconder uma ferramenta ruim colocaria em outras plataformas que dificultam o reembolso 😉
+                </p>
+            </div>
+        </section>
+
+        <!-- 9. CONTEÚDO E ENTREGA -->
+        <section class="section">
+            <h2 class="section-title">📦 Como Você Vai Receber</h2>
+            <p class="section-subtitle">Área de membros completa com todo o suporte</p>
+            
+            <div class="delivery-grid">
+                <div class="delivery-card">
+                    <div class="delivery-icon">🖥️</div>
+                    <h3 class="delivery-title">Tutorial Windows</h3>
+                    <p class="delivery-text">Vídeo passo a passo de como instalar e ativar no Windows</p>
+                </div>
+                
+                <div class="delivery-card">
+                    <div class="delivery-icon">🍎</div>
+                    <h3 class="delivery-title">Tutorial Mac</h3>
+                    <p class="delivery-text">Instalação para Mac versões 10-15, incluindo chips M1/M2</p>
+                </div>
+                
+                <div class="delivery-card">
+                    <div class="delivery-icon">🎚️</div>
+                    <h3 class="delivery-title">Como Usar</h3>
+                    <p class="delivery-text">Tutorial completo de como usar os presets dinâmicos</p>
+                </div>
+                
+                <div class="delivery-card">
+                    <div class="delivery-icon">⚙️</div>
+                    <h3 class="delivery-title">Otimização</h3>
+                    <p class="delivery-text">Aula bônus de como configurar os controles dinâmicos</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10. FAQ INTERATIVO -->
+        <section class="section">
+            <h2 class="section-title">❓ Dúvidas Frequentes</h2>
+            
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Funciona no Mac?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>SIM</strong>, a partir da versão 10: Catalina, Big Sur, Monterey, Ventura, Sonoma, Sequoia. Funciona em M1, M2 e Intel.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Funciona em quais programas?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>TODOS!</strong> Se o programa aceita plugins VST/AU, vai funcionar. FL Studio, Logic, Ableton, Pro Tools, Reaper, Studio One, etc.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Funciona para quais gêneros musicais?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>TODOS TAMBÉM!</strong> Rap, Trap, Funk, R&B, Pop, Rock, Reggae, Forró, Arrocha... Os presets são dinâmicos e se adaptam a qualquer estilo.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Não sei mixar. Vou conseguir usar?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>SIM!</strong> É exatamente para quebrar essa barreira. Os controles têm nomes intuitivos e você só gira os knobs até gostar do resultado.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Os plugins vêm inclusos?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>SIM!</strong> Mais de 200 plugins WAVES profissionais vêm inclusos. Tudo que você precisa para usar os presets.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Como é a entrega?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Você recebe acesso à <strong>área de membros</strong> por email automaticamente. Lá tem todos os tutoriais em vídeo e downloads.</p>
+                        <p><strong>ATENÇÃO:</strong> Confira seu email na hora da compra. Email errado = acesso não chega. Evite Hotmail.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- PORTAL CHECKOUT -->
+    <div class="portal-overlay" id="portalOverlay">
+        <div class="portal-container">
+            <div class="portal-particles" id="portalParticles"></div>
+            <div class="portal-outer"></div>
+            <div class="portal-middle"></div>
+            <div class="portal-inner"></div>
+            <div class="portal-lock">🔒</div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DADOS DO USUÁRIO =====
+        const userData = JSON.parse(localStorage.getItem('voxyMixUserData') || '{}');
+        const dnaMusical = userData.etapa2 || { fama: 50, dinheiro: 50, precisao: 50, velocidade: 50 };
+        const segmento = userData.etapa3?.segmento || 'ambos';
+
+        // ===== PERSONALIZAÇÃO =====
+        function personalizeContent() {
+            // Ajustar subheadline baseado no tamanho da tela
+            const subheadline = document.getElementById('heroSubheadline');
+            const line1 = subheadline.querySelector('.line1');
+            const line2 = subheadline.querySelector('.line2');
+            const line3 = subheadline.querySelector('.line3');
+            
+            function adjustSubheadline() {
+                if (window.innerWidth <= 768) {
+                    // Mobile: 3 linhas
+                    line1.textContent = "Você é UM DOS POUCOS com a chance de";
+                    line2.textContent = "dominar A NOVA ERA DA MIXAGEM";
+                    line3.textContent = "(antes de todo mundo...)";
+                    line3.style.display = "block";
+                } else {
+                    // Desktop: 2 linhas
+                    line1.textContent = "Você é UM DOS POUCOS com a chance de dominar A NOVA ERA DA MIXAGEM";
+                    line2.textContent = "(antes de todo mundo...)";
+                    line3.style.display = "none";
+                }
+            }
+            
+            adjustSubheadline();
+            window.addEventListener('resize', adjustSubheadline);
+        }
+
+        // ===== TOGGLE COMPARISON =====
+        function setupComparison() {
+            const toggleButtons = document.querySelectorAll('.toggle-button');
+            const comparisonCards = document.querySelectorAll('.comparison-card');
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const type = button.dataset.type;
+                    
+                    // Update buttons
+                    toggleButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Update cards
+                    comparisonCards.forEach(card => {
+                        card.classList.remove('show');
+                        if (card.classList.contains(type)) {
+                            setTimeout(() => card.classList.add('show'), 100);
+                        }
+                    });
+                });
+            });
+        }
+
+        // ===== CARROSSEL DE PRESETS =====
+        let currentPresetIndex = 0;
+        const presetsPerView = window.innerWidth <= 768 ? 1 : 3;
+
+        function moveCarousel(direction) {
+            const track = document.getElementById('presetsTrack');
+            const cards = track.children;
+            const maxIndex = Math.max(0, cards.length - presetsPerView);
+            
+            currentPresetIndex += direction;
+            
+            if (currentPresetIndex < 0) currentPresetIndex = 0;
+            if (currentPresetIndex > maxIndex) currentPresetIndex = maxIndex;
+            
+            const translateX = -(currentPresetIndex * (280 + 16)); // card width + gap
+            track.style.transform = `translateX(${translateX}px)`;
+        }
+
+        // ===== TOGGLE BÔNUS =====
+        function toggleBonus(card) {
+            card.classList.toggle('expanded');
+        }
+
+        // ===== FAQ =====
+        function setupFAQ() {
+            const faqItems = document.querySelectorAll('.faq-item');
+
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
+                
+                question.addEventListener('click', () => {
+                    const isActive = item.classList.contains('active');
+                    
+                    // Fechar todos
+                    faqItems.forEach(i => i.classList.remove('active'));
+                    
+                    // Abrir clicado
+                    if (!isActive) {
+                        item.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // ===== PORTAL ANIMATION =====
+        function createPortalParticles() {
+            const container = document.getElementById('portalParticles');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                particle.style.animationDuration = (3 + Math.random() * 2) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        function showPortalAnimation() {
+            const portalOverlay = document.getElementById('portalOverlay');
+            portalOverlay.classList.add('show');
+
+            createPortalParticles();
+            playPortalSound();
+
+            setTimeout(() => {
+                // Aqui você redirecionaria para o checkout real
+                window.location.href = 'https://pay.cakto.com.br/checkout-url'; // Substituir pela URL real
+            }, 3000);
+        }
+
+        function playPortalSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Som dimensional
+                const frequencies = [261.63, 329.63, 392.00, 523.25];
+
+                frequencies.forEach((freq, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    const startTime = audioContext.currentTime + (index * 0.15);
+                    oscillator.frequency.setValueAtTime(freq, startTime);
+
+                    gainNode.gain.setValueAtTime(0.3, startTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 1.5);
+
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 1.5);
+                });
+            } catch (e) {
+                // Fallback silencioso para dispositivos que não suportam Web Audio API
+                console.log('Audio not supported');
+            }
+        }
+
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mostrar container principal
+            document.getElementById('mainContainer').classList.add('show');
+            
+            // Configurar funcionalidades
+            personalizeContent();
+            setupComparison();
+            setupFAQ();
+
+            // CTA listener
+            document.getElementById('ctaButton').addEventListener('click', (e) => {
+                e.preventDefault();
+                showPortalAnimation();
+            });
+
+            // Salvar progresso
+            const currentData = {
+                ...userData,
+                etapa7: {
+                    viewed: true,
+                    timestamp: Date.now()
+                }
+            };
+            localStorage.setItem('voxyMixUserData', JSON.stringify(currentData));
+
+            // Responsive carousel
+            window.addEventListener('resize', () => {
+                currentPresetIndex = 0;
+                moveCarousel(0);
+            });
+        });
+
+        // Tornar funções globais para onclick handlers
+        window.moveCarousel = moveCarousel;
+        window.toggleBonus = toggleBonus;
+    </script>
+</body>
+</html>
